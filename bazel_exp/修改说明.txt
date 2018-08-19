@@ -3,3 +3,6 @@
 3，client通过protobuf结构化表达方式传数据，server端进行相应的解析
 4，server端增加命令行模式，help 查看可支持的命令及格式。 输入以空格和\t为分隔符，可以自动处理连续的分隔符
 5。后台添加查看及踢出策略。
+
+6，new_certs下为证书。使用时需要将server.* ca.crt 放到 server端的运行目录下
+将client.* ca.crt放到client端运行目录下
