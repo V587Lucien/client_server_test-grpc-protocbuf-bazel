@@ -72,6 +72,10 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchRequest, request_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchRequest, struser_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchRequest, strpasswd_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchRequest, strltime_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchRequest, strmode_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::SearchResponse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -81,7 +85,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::SearchRequest)},
-  { 6, -1, sizeof(::SearchResponse)},
+  { 10, -1, sizeof(::SearchResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -110,13 +114,15 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\016examples.proto\" \n\rSearchRequest\022\017\n\007Req"
-      "uest\030\001 \001(\t\"\"\n\016SearchResponse\022\020\n\010Response"
-      "\030\002 \001(\t2:\n\rSearchService\022)\n\006Search\022\016.Sear"
-      "chRequest\032\017.SearchResponseb\006proto3"
+      "\n\016examples.proto\"g\n\rSearchRequest\022\017\n\007Req"
+      "uest\030\001 \001(\t\022\017\n\007strUser\030\002 \001(\t\022\021\n\tstrPasswd"
+      "\030\003 \001(\t\022\020\n\010strLTime\030\004 \001(\t\022\017\n\007strMode\030\005 \001("
+      "\t\"\"\n\016SearchResponse\022\020\n\010Response\030\001 \001(\t2:\n"
+      "\rSearchService\022)\n\006Search\022\016.SearchRequest"
+      "\032\017.SearchResponseb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 154);
+      descriptor, 225);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "examples.proto", &protobuf_RegisterTypes);
 }
@@ -139,6 +145,10 @@ void SearchRequest::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int SearchRequest::kRequestFieldNumber;
+const int SearchRequest::kStrUserFieldNumber;
+const int SearchRequest::kStrPasswdFieldNumber;
+const int SearchRequest::kStrLTimeFieldNumber;
+const int SearchRequest::kStrModeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 SearchRequest::SearchRequest()
@@ -156,11 +166,31 @@ SearchRequest::SearchRequest(const SearchRequest& from)
   if (from.request().size() > 0) {
     request_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.request_);
   }
+  struser_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.struser().size() > 0) {
+    struser_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.struser_);
+  }
+  strpasswd_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.strpasswd().size() > 0) {
+    strpasswd_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strpasswd_);
+  }
+  strltime_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.strltime().size() > 0) {
+    strltime_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strltime_);
+  }
+  strmode_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.strmode().size() > 0) {
+    strmode_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strmode_);
+  }
   // @@protoc_insertion_point(copy_constructor:SearchRequest)
 }
 
 void SearchRequest::SharedCtor() {
   request_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  struser_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strpasswd_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strltime_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strmode_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 SearchRequest::~SearchRequest() {
@@ -170,6 +200,10 @@ SearchRequest::~SearchRequest() {
 
 void SearchRequest::SharedDtor() {
   request_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  struser_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strpasswd_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strltime_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strmode_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 void SearchRequest::SetCachedSize(int size) const {
@@ -193,6 +227,10 @@ void SearchRequest::Clear() {
   (void) cached_has_bits;
 
   request_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  struser_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strpasswd_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strltime_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strmode_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
@@ -216,6 +254,70 @@ bool SearchRequest::MergePartialFromCodedStream(
             this->request().data(), static_cast<int>(this->request().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
             "SearchRequest.Request"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string strUser = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_struser()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->struser().data(), static_cast<int>(this->struser().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "SearchRequest.strUser"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string strPasswd = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_strpasswd()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->strpasswd().data(), static_cast<int>(this->strpasswd().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "SearchRequest.strPasswd"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string strLTime = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_strltime()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->strltime().data(), static_cast<int>(this->strltime().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "SearchRequest.strLTime"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string strMode = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_strmode()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->strmode().data(), static_cast<int>(this->strmode().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "SearchRequest.strMode"));
         } else {
           goto handle_unusual;
         }
@@ -258,6 +360,46 @@ void SearchRequest::SerializeWithCachedSizes(
       1, this->request(), output);
   }
 
+  // string strUser = 2;
+  if (this->struser().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->struser().data(), static_cast<int>(this->struser().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strUser");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->struser(), output);
+  }
+
+  // string strPasswd = 3;
+  if (this->strpasswd().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strpasswd().data(), static_cast<int>(this->strpasswd().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strPasswd");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      3, this->strpasswd(), output);
+  }
+
+  // string strLTime = 4;
+  if (this->strltime().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strltime().data(), static_cast<int>(this->strltime().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strLTime");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      4, this->strltime(), output);
+  }
+
+  // string strMode = 5;
+  if (this->strmode().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strmode().data(), static_cast<int>(this->strmode().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strMode");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      5, this->strmode(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -283,6 +425,50 @@ void SearchRequest::SerializeWithCachedSizes(
         1, this->request(), target);
   }
 
+  // string strUser = 2;
+  if (this->struser().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->struser().data(), static_cast<int>(this->struser().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strUser");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        2, this->struser(), target);
+  }
+
+  // string strPasswd = 3;
+  if (this->strpasswd().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strpasswd().data(), static_cast<int>(this->strpasswd().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strPasswd");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        3, this->strpasswd(), target);
+  }
+
+  // string strLTime = 4;
+  if (this->strltime().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strltime().data(), static_cast<int>(this->strltime().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strLTime");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        4, this->strltime(), target);
+  }
+
+  // string strMode = 5;
+  if (this->strmode().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->strmode().data(), static_cast<int>(this->strmode().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "SearchRequest.strMode");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        5, this->strmode(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -305,6 +491,34 @@ size_t SearchRequest::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
         this->request());
+  }
+
+  // string strUser = 2;
+  if (this->struser().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->struser());
+  }
+
+  // string strPasswd = 3;
+  if (this->strpasswd().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->strpasswd());
+  }
+
+  // string strLTime = 4;
+  if (this->strltime().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->strltime());
+  }
+
+  // string strMode = 5;
+  if (this->strmode().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->strmode());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -338,6 +552,22 @@ void SearchRequest::MergeFrom(const SearchRequest& from) {
 
     request_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.request_);
   }
+  if (from.struser().size() > 0) {
+
+    struser_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.struser_);
+  }
+  if (from.strpasswd().size() > 0) {
+
+    strpasswd_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strpasswd_);
+  }
+  if (from.strltime().size() > 0) {
+
+    strltime_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strltime_);
+  }
+  if (from.strmode().size() > 0) {
+
+    strmode_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strmode_);
+  }
 }
 
 void SearchRequest::CopyFrom(const ::google::protobuf::Message& from) {
@@ -365,6 +595,14 @@ void SearchRequest::Swap(SearchRequest* other) {
 void SearchRequest::InternalSwap(SearchRequest* other) {
   using std::swap;
   request_.Swap(&other->request_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  struser_.Swap(&other->struser_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  strpasswd_.Swap(&other->strpasswd_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  strltime_.Swap(&other->strltime_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  strmode_.Swap(&other->strmode_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }
@@ -448,10 +686,10 @@ bool SearchResponse::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string Response = 2;
-      case 2: {
+      // string Response = 1;
+      case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_response()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -490,14 +728,14 @@ void SearchResponse::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string Response = 2;
+  // string Response = 1;
   if (this->response().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->response().data(), static_cast<int>(this->response().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "SearchResponse.Response");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->response(), output);
+      1, this->response(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -514,7 +752,7 @@ void SearchResponse::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string Response = 2;
+  // string Response = 1;
   if (this->response().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->response().data(), static_cast<int>(this->response().length()),
@@ -522,7 +760,7 @@ void SearchResponse::SerializeWithCachedSizes(
       "SearchResponse.Response");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->response(), target);
+        1, this->response(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -542,7 +780,7 @@ size_t SearchResponse::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // string Response = 2;
+  // string Response = 1;
   if (this->response().size() > 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(

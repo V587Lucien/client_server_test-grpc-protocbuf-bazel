@@ -3,11 +3,15 @@
 	message SearchRequest
 	{
 		string Request = 1;
+		string strUser = 2;
+		string strPasswd = 3;
+		string strLTime = 4;
+		string strMode = 5;
 	}
  
 	message SearchResponse
 	{
-		string Response = 2;
+		string Response = 1;
 	}
  
 	service SearchService {

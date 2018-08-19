@@ -161,11 +161,71 @@ class SearchRequest : public ::google::protobuf::Message /* @@protoc_insertion_p
   ::std::string* release_request();
   void set_allocated_request(::std::string* request);
 
+  // string strUser = 2;
+  void clear_struser();
+  static const int kStrUserFieldNumber = 2;
+  const ::std::string& struser() const;
+  void set_struser(const ::std::string& value);
+  #if LANG_CXX11
+  void set_struser(::std::string&& value);
+  #endif
+  void set_struser(const char* value);
+  void set_struser(const char* value, size_t size);
+  ::std::string* mutable_struser();
+  ::std::string* release_struser();
+  void set_allocated_struser(::std::string* struser);
+
+  // string strPasswd = 3;
+  void clear_strpasswd();
+  static const int kStrPasswdFieldNumber = 3;
+  const ::std::string& strpasswd() const;
+  void set_strpasswd(const ::std::string& value);
+  #if LANG_CXX11
+  void set_strpasswd(::std::string&& value);
+  #endif
+  void set_strpasswd(const char* value);
+  void set_strpasswd(const char* value, size_t size);
+  ::std::string* mutable_strpasswd();
+  ::std::string* release_strpasswd();
+  void set_allocated_strpasswd(::std::string* strpasswd);
+
+  // string strLTime = 4;
+  void clear_strltime();
+  static const int kStrLTimeFieldNumber = 4;
+  const ::std::string& strltime() const;
+  void set_strltime(const ::std::string& value);
+  #if LANG_CXX11
+  void set_strltime(::std::string&& value);
+  #endif
+  void set_strltime(const char* value);
+  void set_strltime(const char* value, size_t size);
+  ::std::string* mutable_strltime();
+  ::std::string* release_strltime();
+  void set_allocated_strltime(::std::string* strltime);
+
+  // string strMode = 5;
+  void clear_strmode();
+  static const int kStrModeFieldNumber = 5;
+  const ::std::string& strmode() const;
+  void set_strmode(const ::std::string& value);
+  #if LANG_CXX11
+  void set_strmode(::std::string&& value);
+  #endif
+  void set_strmode(const char* value);
+  void set_strmode(const char* value, size_t size);
+  ::std::string* mutable_strmode();
+  ::std::string* release_strmode();
+  void set_allocated_strmode(::std::string* strmode);
+
   // @@protoc_insertion_point(class_scope:SearchRequest)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr request_;
+  ::google::protobuf::internal::ArenaStringPtr struser_;
+  ::google::protobuf::internal::ArenaStringPtr strpasswd_;
+  ::google::protobuf::internal::ArenaStringPtr strltime_;
+  ::google::protobuf::internal::ArenaStringPtr strmode_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_examples_2eproto::TableStruct;
 };
@@ -258,9 +318,9 @@ class SearchResponse : public ::google::protobuf::Message /* @@protoc_insertion_
 
   // accessors -------------------------------------------------------
 
-  // string Response = 2;
+  // string Response = 1;
   void clear_response();
-  static const int kResponseFieldNumber = 2;
+  static const int kResponseFieldNumber = 1;
   const ::std::string& response() const;
   void set_response(const ::std::string& value);
   #if LANG_CXX11
@@ -344,11 +404,223 @@ inline void SearchRequest::set_allocated_request(::std::string* request) {
   // @@protoc_insertion_point(field_set_allocated:SearchRequest.Request)
 }
 
+// string strUser = 2;
+inline void SearchRequest::clear_struser() {
+  struser_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& SearchRequest::struser() const {
+  // @@protoc_insertion_point(field_get:SearchRequest.strUser)
+  return struser_.GetNoArena();
+}
+inline void SearchRequest::set_struser(const ::std::string& value) {
+  
+  struser_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:SearchRequest.strUser)
+}
+#if LANG_CXX11
+inline void SearchRequest::set_struser(::std::string&& value) {
+  
+  struser_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:SearchRequest.strUser)
+}
+#endif
+inline void SearchRequest::set_struser(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  struser_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:SearchRequest.strUser)
+}
+inline void SearchRequest::set_struser(const char* value, size_t size) {
+  
+  struser_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:SearchRequest.strUser)
+}
+inline ::std::string* SearchRequest::mutable_struser() {
+  
+  // @@protoc_insertion_point(field_mutable:SearchRequest.strUser)
+  return struser_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* SearchRequest::release_struser() {
+  // @@protoc_insertion_point(field_release:SearchRequest.strUser)
+  
+  return struser_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SearchRequest::set_allocated_struser(::std::string* struser) {
+  if (struser != NULL) {
+    
+  } else {
+    
+  }
+  struser_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), struser);
+  // @@protoc_insertion_point(field_set_allocated:SearchRequest.strUser)
+}
+
+// string strPasswd = 3;
+inline void SearchRequest::clear_strpasswd() {
+  strpasswd_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& SearchRequest::strpasswd() const {
+  // @@protoc_insertion_point(field_get:SearchRequest.strPasswd)
+  return strpasswd_.GetNoArena();
+}
+inline void SearchRequest::set_strpasswd(const ::std::string& value) {
+  
+  strpasswd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:SearchRequest.strPasswd)
+}
+#if LANG_CXX11
+inline void SearchRequest::set_strpasswd(::std::string&& value) {
+  
+  strpasswd_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:SearchRequest.strPasswd)
+}
+#endif
+inline void SearchRequest::set_strpasswd(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  strpasswd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:SearchRequest.strPasswd)
+}
+inline void SearchRequest::set_strpasswd(const char* value, size_t size) {
+  
+  strpasswd_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:SearchRequest.strPasswd)
+}
+inline ::std::string* SearchRequest::mutable_strpasswd() {
+  
+  // @@protoc_insertion_point(field_mutable:SearchRequest.strPasswd)
+  return strpasswd_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* SearchRequest::release_strpasswd() {
+  // @@protoc_insertion_point(field_release:SearchRequest.strPasswd)
+  
+  return strpasswd_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SearchRequest::set_allocated_strpasswd(::std::string* strpasswd) {
+  if (strpasswd != NULL) {
+    
+  } else {
+    
+  }
+  strpasswd_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), strpasswd);
+  // @@protoc_insertion_point(field_set_allocated:SearchRequest.strPasswd)
+}
+
+// string strLTime = 4;
+inline void SearchRequest::clear_strltime() {
+  strltime_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& SearchRequest::strltime() const {
+  // @@protoc_insertion_point(field_get:SearchRequest.strLTime)
+  return strltime_.GetNoArena();
+}
+inline void SearchRequest::set_strltime(const ::std::string& value) {
+  
+  strltime_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:SearchRequest.strLTime)
+}
+#if LANG_CXX11
+inline void SearchRequest::set_strltime(::std::string&& value) {
+  
+  strltime_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:SearchRequest.strLTime)
+}
+#endif
+inline void SearchRequest::set_strltime(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  strltime_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:SearchRequest.strLTime)
+}
+inline void SearchRequest::set_strltime(const char* value, size_t size) {
+  
+  strltime_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:SearchRequest.strLTime)
+}
+inline ::std::string* SearchRequest::mutable_strltime() {
+  
+  // @@protoc_insertion_point(field_mutable:SearchRequest.strLTime)
+  return strltime_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* SearchRequest::release_strltime() {
+  // @@protoc_insertion_point(field_release:SearchRequest.strLTime)
+  
+  return strltime_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SearchRequest::set_allocated_strltime(::std::string* strltime) {
+  if (strltime != NULL) {
+    
+  } else {
+    
+  }
+  strltime_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), strltime);
+  // @@protoc_insertion_point(field_set_allocated:SearchRequest.strLTime)
+}
+
+// string strMode = 5;
+inline void SearchRequest::clear_strmode() {
+  strmode_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& SearchRequest::strmode() const {
+  // @@protoc_insertion_point(field_get:SearchRequest.strMode)
+  return strmode_.GetNoArena();
+}
+inline void SearchRequest::set_strmode(const ::std::string& value) {
+  
+  strmode_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:SearchRequest.strMode)
+}
+#if LANG_CXX11
+inline void SearchRequest::set_strmode(::std::string&& value) {
+  
+  strmode_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:SearchRequest.strMode)
+}
+#endif
+inline void SearchRequest::set_strmode(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  strmode_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:SearchRequest.strMode)
+}
+inline void SearchRequest::set_strmode(const char* value, size_t size) {
+  
+  strmode_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:SearchRequest.strMode)
+}
+inline ::std::string* SearchRequest::mutable_strmode() {
+  
+  // @@protoc_insertion_point(field_mutable:SearchRequest.strMode)
+  return strmode_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* SearchRequest::release_strmode() {
+  // @@protoc_insertion_point(field_release:SearchRequest.strMode)
+  
+  return strmode_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void SearchRequest::set_allocated_strmode(::std::string* strmode) {
+  if (strmode != NULL) {
+    
+  } else {
+    
+  }
+  strmode_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), strmode);
+  // @@protoc_insertion_point(field_set_allocated:SearchRequest.strMode)
+}
+
 // -------------------------------------------------------------------
 
 // SearchResponse
 
-// string Response = 2;
+// string Response = 1;
 inline void SearchResponse::clear_response() {
   response_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }

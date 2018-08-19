@@ -7,15 +7,21 @@
 #include <grpc++/server.h>
 #include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
- 
+#include <fstream>
+#include <streambuf>
+#include <vector>
+
 #include "lib/examples.grpc.pb.h"
 #include "lib/Base64.h" 
+#include "lib/Lock.h"
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-#define CRYPT_KEY "heigaga"
+//#define CRYPT_KEY "heigaga"
+static int kick_time_conf = 0;
 
 typedef struct stClientInfo
 {
@@ -38,39 +44,71 @@ typedef struct stClientInfo
   }
 }stClient,*pClient;
 
+typedef struct EsdocInfo
+{
+  std::string strId;
+  std::string strUser;
+  std::string strSource;
+  EsdocInfo()
+  {
+    strId = "";
+    strUser = "";
+    strSource = "";
+  }
+}docinfo;
+
+typedef std::vector<docinfo> vct_docinfo;
+typedef vct_docinfo::iterator vct_docinfo_iter;
+  
+//创建一个互斥锁
+CMutex g_Lock;  //for db
+CMutex g_sLock; //for static
+
+class curltool
+{
+public:
+  curltool(){};
+  ~curltool(){};
+  std::string dealCurlOrder(std::string strCode);
+};
  
 class SearchRequestImpl final : public SearchService::Service {
   Status Search(ServerContext* context, const SearchRequest* request,
                   SearchResponse* reply) override {
-    char szDecodeData[2048] = {"\0"};
-    m_Base64.Decode( (request->request()).c_str(),(unsigned char*)szDecodeData,2048);
+    //对被保护资源自动加锁
+	  //函数结束前，自动解锁
+	  //printf("===[ lock ]===\n");
+	  CMyLock lock(g_Lock);
+
+    //char szDecodeData[2048] = {"\0"};
+    //m_Base64.Decode( (request->request()).c_str(),(unsigned char*)szDecodeData,2048);
     //std::cout << "get string : " << szDecodeData << std::endl;
     std::string strClientAddr = context->peer();
     //std::cout << "connect : " << strClientAddr << std::endl;
-    int res = dealPostString((const char*)szDecodeData,strClientAddr);
+    int res = dealPostString(request,strClientAddr);
     char szResponse[2];
     sprintf(szResponse,"%d",res);
     reply->set_response(szResponse);
+    //printf("===[ unlock ]===\n");
     return Status::OK;
   }
 
 //new functions for server  
 public:
   int setDBip(std::string strAddr);
+  
 private:
   std::string m_es_url;
   CBase64 m_Base64;
-  int dealPostString(const char* szPostString,std::string strClientAddr);
-  int getClientInfo(const char* szPostString,std::string strClientAddr,stClient& clientInfo);
+  curltool tools;
+  int dealPostString(const SearchRequest* request,std::string strClientAddr);
+  int getClientInfo(const SearchRequest* request,std::string strClientAddr,stClient& clientInfo);
   int deal(stClient clientInfo);
   std::string getStatus(stClient clientInfo);
   std::string getUserPasswd(stClient clientInfo);
   std::string kickOffOldUser(stClient clientInfo);
   std::string addNewLoginInfo(stClient clientInfo);
   std::string addNewUser(stClient clientInfo);
-  std::string dealCurlOrder(std::string strCode);
-
-  
 };
  
 int SearchRequestImpl::setDBip(std::string strAddr)
@@ -78,25 +116,44 @@ int SearchRequestImpl::setDBip(std::string strAddr)
   m_es_url = strAddr;
   return 0;
 }
-int SearchRequestImpl::dealPostString(const char* szPostString,std::string strClientAddr)
+int SearchRequestImpl::dealPostString(const SearchRequest* request,std::string strClientAddr)
 {
   int res = 0;
   stClient clientInfo;
-  res = getClientInfo((const char*)szPostString,strClientAddr,clientInfo);
+  res = getClientInfo(request,strClientAddr,clientInfo);
   res = deal(clientInfo);
-  if( res == 1 )
+  /*if( res == 1 )
     std::cout << "user : " << clientInfo.szUser << "  sign up susseced!" << std::endl;
   else if ( res == 2 )
     std::cout << "user : " << clientInfo.szUser << "  sign up failed!"  << std::endl;
   else if ( res == 3 )
     std::cout << "user : " << clientInfo.szUser << "  sign in failed!"  << std::endl;
   else if ( res == 4 )
-    std::cout << "user : " << clientInfo.szUser << "  connect !"  << std::endl;
+    std::cout << "user : " << clientInfo.szUser << "  connect !"  << std::endl;*/
   
   return res;
 }
 
-int SearchRequestImpl::getClientInfo(const char* szPostString,std::string strClientAddr,stClient& clientInfo)
+int SearchRequestImpl::getClientInfo(const SearchRequest* request,std::string strClientAddr,stClient& clientInfo)
+{
+  if(request == NULL)
+    return -1;
+  //sscanf(szPostString,"%[^|]|%[^|]|%[^|]|%[^|]",clientInfo.szUser,clientInfo.szPasswd,clientInfo.szMode,clientInfo.szCTime);
+  sprintf(clientInfo.szUser,"%s",(request->struser()).c_str());
+  sprintf(clientInfo.szPasswd,"%s",(request->strpasswd()).c_str());
+  sprintf(clientInfo.szMode,"%s",(request->strmode()).c_str());
+  sprintf(clientInfo.szCTime,"%s",(request->strltime()).c_str());
+  
+  strncpy(clientInfo.szClientIpv4or6,strClientAddr.c_str(),4);
+  if( strcmp(clientInfo.szClientIpv4or6,"ipv4") == 0 )
+    sscanf(strClientAddr.c_str(),"%*[^:]:%[^:]:%s",clientInfo.szClientIp,clientInfo.szClientPort);
+  else
+    sscanf(strClientAddr.c_str(),"%*[^[][%[^]]]:%s",clientInfo.szClientIp,clientInfo.szClientPort);
+  
+  return 0;
+}
+
+/*int SearchRequestImpl::getClientInfo(const char* szPostString,std::string strClientAddr,stClient& clientInfo)
 {
   if(szPostString == NULL)
     return -1;
@@ -108,7 +165,7 @@ int SearchRequestImpl::getClientInfo(const char* szPostString,std::string strCli
     sscanf(strClientAddr.c_str(),"%*[^[][%[^]]]:%s",clientInfo.szClientIp,clientInfo.szClientPort);
   
   return 0;
-}
+}*/
 
 int SearchRequestImpl::deal(stClient clientInfo)
 {
@@ -177,7 +234,7 @@ std::string SearchRequestImpl::getStatus(stClient clientInfo)
   strCode += clientInfo.szCTime;
   strCode += "\"}}]}}}'";
   
-  std::string strRes = dealCurlOrder(strCode);
+  std::string strRes = tools.dealCurlOrder(strCode);
   char* pBegin = strstr((char*)strRes.c_str(),"\"status\":\"");
   if(pBegin)
   {
@@ -202,7 +259,7 @@ std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
   strCode += clientInfo.szUser;
   strCode += "'";
   
-  std::string strRes = dealCurlOrder(strCode);
+  std::string strRes = tools.dealCurlOrder(strCode);
   char* pBegin = strstr((char*)strRes.c_str(),"\"passwd\":\"");
   if(pBegin)
   {
@@ -229,7 +286,7 @@ std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
   strCode += clientInfo.szUser;
   strCode += "\"}},{\"match\":{\"status\":\"1\"}}]}}}'";
   
-  std::string strRes = dealCurlOrder(strCode);
+  std::string strRes = tools.dealCurlOrder(strCode);
   char* pBegin = strstr((char*)strRes.c_str(),"\"_id\":\"");
   if(pBegin)
   {
@@ -267,7 +324,7 @@ std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
     strCode += "' -d '";
     strCode += strSource;
     strCode += "'";
-    strRes = dealCurlOrder(strCode);
+    strRes = tools.dealCurlOrder(strCode);
     return "2";
   }
   else
@@ -286,7 +343,7 @@ std::string SearchRequestImpl::addNewLoginInfo(stClient clientInfo)
   strCode += "\",\"ltime\":\"";
   strCode += clientInfo.szCTime;
   strCode += "\",\"status\":\"1\"}'";
-  std::string strRes = dealCurlOrder(strCode);
+  std::string strRes = tools.dealCurlOrder(strCode);
   if(strstr(strRes.c_str(),"successful\":1"))
     strRes = "1";
   else
@@ -305,7 +362,7 @@ std::string SearchRequestImpl::addNewUser(stClient clientInfo)
   m_Base64.Encode_turn(clientInfo.szPasswd,(unsigned char*)szEncodeData,2048);
   strCode += szEncodeData;
   strCode += "\"}'";
-  std::string strRes = dealCurlOrder(strCode);
+  std::string strRes = tools.dealCurlOrder(strCode);
   if(strstr(strRes.c_str(),"successful\":1"))
     strRes = "1";
   else
@@ -313,8 +370,9 @@ std::string SearchRequestImpl::addNewUser(stClient clientInfo)
   return strRes;
 }
 
-std::string SearchRequestImpl::dealCurlOrder(std::string strCode)
+std::string curltool::dealCurlOrder(std::string strCode)
 {
+  //printf("==[%s]==\n",strCode.c_str());
   FILE* fp = popen(strCode.c_str(),"r");
   if (NULL == fp)
   {
@@ -395,6 +453,80 @@ bool createESIndex(std::string strAddr)
   return true;
 }
 
+bool getAllUser(std::string strRes,vct_docinfo& doc_vct)
+{
+  if(strRes.empty())
+    return false;
+  char* pBegin = strstr((char*)strRes.c_str(),"\"_id\":\"");
+  while(pBegin!= NULL)
+  {
+    pBegin += 7;
+    char* pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      break;
+    char szId[pEnd-pBegin+1];
+    memset(szId,0x00,pEnd-pBegin+1);
+    memcpy(szId,pBegin,pEnd - pBegin);
+    pBegin = strstr(pEnd,"\"_source\":{");
+    if(pBegin == NULL)
+      break;
+    pBegin+= 10;
+    pEnd = strstr(pBegin,"\"status\":\"1\"");
+    if(pEnd == NULL)
+      break;
+    char szSource[pEnd-pBegin+1];
+    memset(szSource,0x00,pEnd - pBegin + 1);
+    memcpy(szSource,pBegin,pEnd - pBegin);
+    
+    pBegin = strstr(pBegin,"\"user\":\"");
+    if(pBegin == NULL)
+      break;
+    pBegin += 8;
+    pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      break;
+    char szUser[pEnd-pBegin+1];
+    memset(szUser,0x00,pEnd-pBegin+1);
+    memcpy(szUser,pBegin,pEnd-pBegin);  
+    
+    pBegin = strstr(pEnd,"\"_id\":\"");
+      
+    docinfo dInfo;
+    dInfo.strId = szId;
+    dInfo.strUser = szUser;
+    dInfo.strSource = szSource;
+    doc_vct.push_back(dInfo);
+  }
+  return true;
+}
+
+vct_docinfo getUserOnline(std::string strAddr,std::string strUser = "",std::string strLTime = "")
+{
+  std::string strCode = "curl -s -XGET '";
+  strCode += strAddr;
+  strCode += "/clientinfo/user_log_info/_search' -d '{\"query\":{\"bool\":{\"must\":[{\"match\":{\"status\":\"1\"}}";
+  if(!strUser.empty())
+  {
+    strCode += ",{\"wildcard\":{\"user\":\"*";
+    strCode += strUser;
+    strCode += "*\"}}";
+  }
+  if(!strLTime.empty())
+  {
+    strCode += ",{\"range\":{\"ltime\":{\"lte\":\"";
+    strCode += strLTime;
+    strCode += "\"}}}";
+  }
+  strCode += "]}}}'";
+  //printf("strcode = [%s]\n",strCode.c_str());
+  curltool tools;
+  std::string strRes = tools.dealCurlOrder(strCode);
+  //printf("strRes = [%s]\n",strRes.c_str());
+  
+  vct_docinfo doc_vct;
+  getAllUser(strRes,doc_vct);
+  return doc_vct;
+}
 void RunServer(std::string strAddr) {
   
   if( !createESIndex(strAddr))
@@ -405,14 +537,246 @@ void RunServer(std::string strAddr) {
   std::string server_address("0.0.0.0:50051");
   SearchRequestImpl service;
   service.setDBip(strAddr);
-
   ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  
+  
+  std::ifstream skey("server.key");
+  std::string strServerKey((std::istreambuf_iterator<char>(skey)),std::istreambuf_iterator<char>());
+  //std::cout << "key: " <<strServerKey << std::endl;
+  std::ifstream sCrt("server.crt");  
+  std::string strServerCert((std::istreambuf_iterator<char>(sCrt)),std::istreambuf_iterator<char>());
+  //std::cout << "crt: " << strServerCert << std::endl;
+  std::ifstream sCaCrt("ca.crt");  
+  std::string strCaCert((std::istreambuf_iterator<char>(sCaCrt)),std::istreambuf_iterator<char>());
+  //std::cout << "ca: " << strClientCert << std::endl;
+  grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp ={strServerKey.c_str(),strServerCert.c_str()};
+  //grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
+  grpc::SslServerCredentialsOptions ssl_opts;
+  ssl_opts.pem_root_certs=strCaCert;
+  ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+  std::shared_ptr<grpc::ServerCredentials> creds = grpc::SslServerCredentials(ssl_opts);
+  //auto creds = grpc::SslServerCredentials(grpc::SslServerCredentialsOptions());
+  builder.AddListeningPort(server_address,creds );
+  //builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  //builder.AddListeningPort(server_address, grpc::SslServerCredentials(grpc::SslServerCredentialsOptions()));
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout <<  std::endl << "Server listening on " << server_address << std::endl;
  
-  server->Wait();
+  //server->Wait();
+  while(true)
+  {
+    printf("server-code:");
+    char szCode[1024] = {"\0"};
+    //scanf("%s",szCode);
+    fgets(szCode,1024,stdin);
+    int len = strlen(szCode);
+    szCode[--len] = '\0';
+    if( len == 0 )
+      continue;
+    char* p = NULL;
+    int i = 0;
+    for( ; i< len ; i++)
+    {
+      if(*(szCode+i) != ' ' && *(szCode+i) != '\t')
+      {
+        p=szCode+i;
+        break;
+      }
+    }
+    if( i == len)
+      continue;
+    len -= i;
+    while(char* pT = strchr(p,'\t'))
+    {
+      *pT = ' ';
+    }
+    
+    char* szCodes[4] = {"\0","\0","\0","\0"};
+    char* s = strsep(&p," ");
+    for(int l = 0 ; l < 4 ; l++)
+    {
+      if(s == NULL)
+       break;
+      if(strlen(s) == 0)
+      {
+        l--;
+        s = strsep(&p," ");
+        continue;
+      }
+      szCodes[l] = s;
+      s = strsep(&p," ");
+    }
+    CMyLock lock(g_Lock);
+    if(strcmp(szCodes[0],"exit") ==0 )
+      break;
+    else if(strcmp(szCodes[0],"help") == 0)
+      printf("mode list:\n  list : 显示所有在线用户\n  list -t m : 显示上线时间超过 m 分钟，且仍然在线的用户\n  list -u username : 显示用户名包含 username 的所有在线用户\n  kickoff -u username :强制用户username下线\n  kickoff -t m ：强制登录时间超过 m 分钟的所有用户下线\n  kickoff -a : 强制所有当前在线用户下线\n  set -t m : 设置策略：自动强制在线时间超过m分钟的用户下线。使用set -t 或set -t 0 取消策略。重新配置会自动生效。\n  exit : 退出并关闭服务\n");
+    else if(strcmp(szCodes[0],"list") == 0)
+    {
+      if(strcmp(szCodes[1],"-u") == 0)
+      {
+        vct_docinfo user_vct = getUserOnline(strAddr,szCodes[2]);
+        vct_docinfo_iter iter = user_vct.begin();
+        for(;iter!= user_vct.end();iter++)
+        {
+          printf("  %s\n",(iter->strUser).c_str());
+        }
+      }
+      else if(strcmp(szCodes[1],"-t") == 0)
+      {
+        int c_time = (int)time(NULL);
+        c_time -= atoi(szCodes[2])*60;
+        char szTmp[24];
+        sprintf(szTmp,"%d",c_time);
+        vct_docinfo user_vct = getUserOnline(strAddr,"",szTmp);
+        vct_docinfo_iter iter = user_vct.begin();
+        for(;iter!= user_vct.end();iter++)
+        {
+          printf("  %s\n",(iter->strUser).c_str());
+        }
+      }
+      else
+      {
+        vct_docinfo user_vct = getUserOnline(strAddr);
+        vct_docinfo_iter iter = user_vct.begin();
+        for(;iter!= user_vct.end();iter++)
+        {
+          printf("  %s\n",(iter->strUser).c_str());
+        }
+      }
+    }
+    else if(strcmp(szCodes[0],"kickoff") == 0)
+    {
+      if(strcmp(szCodes[1],"-u") == 0)
+      {
+        if(strlen(szCodes[2]) < 1 )
+        {
+          printf("请输入正确的用户名\n");
+          
+        }
+        else
+        {
+          vct_docinfo user_vct = getUserOnline(strAddr,szCodes[2]);
+          vct_docinfo_iter iter = user_vct.begin();
+          for(;iter!= user_vct.end();iter++)
+          {
+            if(iter->strUser == szCodes[2])
+            {
+              std::string strCode = "curl -s -XPUT '";
+              strCode += strAddr;
+              strCode += "/clientinfo/user_log_info/";
+              strCode += iter->strId;
+              strCode += "' -d '";
+              strCode += iter->strSource;
+              strCode += "\"status\":\"0\"}'";
+              curltool tools;
+              tools.dealCurlOrder(strCode);
+            }
+          }
+        }
+      }
+      else if(strcmp(szCodes[1],"-t") == 0)
+      {
+        int c_time = (int)time(NULL);
+        c_time -= atoi(szCodes[2])*60;
+        char szTmp[24];
+        sprintf(szTmp,"%d",c_time);
+        vct_docinfo user_vct = getUserOnline(strAddr,"",szTmp);
+        vct_docinfo_iter iter = user_vct.begin();
+        for(;iter!= user_vct.end();iter++)
+        {
+          std::string strCode = "curl -s -XPUT '";
+          strCode += strAddr;
+          strCode += "/clientinfo/user_log_info/";
+          strCode += iter->strId;
+          strCode += "' -d '";
+          strCode += iter->strSource;
+          strCode += "\"status\":\"0\"}'";
+          curltool tools;
+          tools.dealCurlOrder(strCode);
+        }
+      }
+      else if(strcmp(szCodes[1],"-a") == 0)
+      {
+        vct_docinfo user_vct = getUserOnline(strAddr);
+        vct_docinfo_iter iter = user_vct.begin();
+        for(;iter!= user_vct.end();iter++)
+        {
+          std::string strCode = "curl -s -XPUT '";
+          strCode += strAddr;
+          strCode += "/clientinfo/user_log_info/";
+          strCode += iter->strId;
+          strCode += "' -d '";
+          strCode += iter->strSource;
+          strCode += "\"status\":\"0\"}'";
+          curltool tools;
+          tools.dealCurlOrder(strCode);
+        }
+      }
+      else
+      {
+        
+      }
+    }
+    else if(strcmp(szCodes[0],"set") == 0)
+    {
+      if (strcmp(szCodes[1],"-t") == 0)
+      {
+        kick_time_conf = atoi(szCodes[2]);
+      }
+    }
+  }
+}
+
+void* backround(void* param)
+{
+  std::string strAddr = (const char*)param;
+  while(true)
+  {
+    if( kick_time_conf != 0 )
+    {
+      int c_time = (int)time(NULL);
+      c_time -= kick_time_conf*60;
+      char szTmp[24];
+      sprintf(szTmp,"%d",c_time);
+      CMyLock lock(g_Lock);
+      vct_docinfo user_vct = getUserOnline(strAddr,"",szTmp);
+      vct_docinfo_iter iter = user_vct.begin();
+      for(;iter!= user_vct.end();iter++)
+      {
+        std::string strCode = "curl -s -XPUT '";
+        strCode += strAddr;
+        strCode += "/clientinfo/user_log_info/";
+        strCode += iter->strId;
+        strCode += "' -d '";
+        strCode += iter->strSource;
+        strCode += "\"status\":\"0\"}'";
+        curltool tools;
+        tools.dealCurlOrder(strCode);
+      }
+    }
+    sleep(10);
+  }
+  return (void*)NULL;
+}
+bool CreateServiceThread(std::string strAddr)
+{
+	//设置线程状态
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED );
+    
+  pthread_t tThreadT;
+	if (pthread_create(&tThreadT, &attr, backround,(void*)strAddr.c_str() ))
+	{
+		//写错误日志
+		printf("开启策略线程失败\n");
+		return false;
+	}
+  pthread_attr_destroy(&attr);
+  return true;
 }
  
 int main(int argc, char** argv) {
@@ -439,6 +803,9 @@ int main(int argc, char** argv) {
     "   -H dbip:port\n");
     return 0;
   }
+  if(!CreateServiceThread(strAddr))
+    return 0;
+  
   RunServer(strAddr);
  
   return 0;

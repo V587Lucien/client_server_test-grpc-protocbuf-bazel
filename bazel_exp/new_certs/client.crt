@@ -1,0 +1,70 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 6 (0x6)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=cn, ST=gd, L=sz, O=seentech, OU=seentech, CN=seentech/emailAddress=seentech
+        Validity
+            Not Before: Aug 18 03:34:13 2018 GMT
+            Not After : Aug 18 03:34:13 2019 GMT
+        Subject: C=cn, ST=gd, O=seentech, OU=seentech, CN=seentech/emailAddress=seentech
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:d7:05:5f:42:68:71:4f:32:de:a1:97:31:6d:3a:
+                    45:4a:2b:eb:c4:22:91:73:ca:4c:5b:3b:16:e3:f7:
+                    f3:6f:20:75:db:0c:65:ec:9e:d2:6f:2d:a8:a8:16:
+                    92:87:11:a0:34:ba:ba:e3:c5:5a:bc:22:4c:35:eb:
+                    ce:52:90:4a:e8:d3:a9:60:d8:c9:a2:2c:04:30:40:
+                    c2:a9:e9:a4:01:d2:1d:73:4a:fd:6e:82:e7:14:9e:
+                    a7:fd:2b:6c:85:bd:ce:bb:66:9d:e9:46:78:ca:4e:
+                    f9:36:df:51:e9:a3:f8:c4:d0:ed:8c:79:0c:b2:56:
+                    a7:49:32:8e:ed:c7:22:46:fb
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                AC:08:9E:56:73:C4:7B:07:A6:E1:74:29:03:1F:9F:AD:FE:D2:9C:A4
+            X509v3 Authority Key Identifier: 
+                keyid:ED:B1:9D:E8:BB:D9:19:E1:9E:35:E4:9D:A9:69:9C:B7:22:41:15:E3
+
+    Signature Algorithm: sha256WithRSAEncryption
+         5e:db:6d:37:86:82:29:58:97:e1:cc:d6:b8:f3:ee:88:f2:e7:
+         a8:ca:6d:9d:46:cb:42:0c:d3:2a:82:9a:cc:a1:88:36:d1:1e:
+         88:da:b9:fc:d8:4c:61:2a:6b:fe:83:17:5d:70:df:0f:51:85:
+         10:e9:44:39:b7:19:ff:71:2d:73:a2:3b:19:3e:bb:8f:85:a9:
+         ca:cf:af:85:30:df:84:6f:c2:83:47:8d:11:57:d1:83:d0:25:
+         af:03:0a:ec:46:b5:fb:8b:dd:ef:bf:8e:36:19:41:a9:32:1a:
+         0d:ab:b6:5f:17:24:00:1b:1e:b8:af:11:5b:c8:71:f4:dd:b5:
+         4a:94:82:4d:64:f0:cc:51:5a:67:1c:b1:43:1d:cf:f8:9b:25:
+         f2:d6:11:8e:bf:36:a8:00:d9:21:4a:21:46:e0:83:65:53:11:
+         d5:42:a1:0a:c5:ef:ca:ab:3a:69:3b:f9:a3:53:7b:33:b8:da:
+         d8:d6:0b:bc:d4:06:f9:22:fc:b7:ab:b4:54:af:e2:c0:1e:3e:
+         e1:2b:20:18:cc:ef:eb:80:f5:6d:84:6e:a5:a6:74:22:49:16:
+         8e:c9:10:d6:f3:7e:33:c8:54:7e:ec:96:c6:0f:ab:bb:24:9a:
+         d2:55:7d:04:47:a8:64:e2:1f:e2:7a:65:01:29:93:37:d6:a9:
+         22:d3:15:13
+-----BEGIN CERTIFICATE-----
+MIIDVzCCAj+gAwIBAgIBBjANBgkqhkiG9w0BAQsFADB5MQswCQYDVQQGEwJjbjEL
+MAkGA1UECAwCZ2QxCzAJBgNVBAcMAnN6MREwDwYDVQQKDAhzZWVudGVjaDERMA8G
+A1UECwwIc2VlbnRlY2gxETAPBgNVBAMMCHNlZW50ZWNoMRcwFQYJKoZIhvcNAQkB
+FghzZWVudGVjaDAeFw0xODA4MTgwMzM0MTNaFw0xOTA4MTgwMzM0MTNaMGwxCzAJ
+BgNVBAYTAmNuMQswCQYDVQQIDAJnZDERMA8GA1UECgwIc2VlbnRlY2gxETAPBgNV
+BAsMCHNlZW50ZWNoMREwDwYDVQQDDAhzZWVudGVjaDEXMBUGCSqGSIb3DQEJARYI
+c2VlbnRlY2gwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBANcFX0JocU8y3qGX
+MW06RUor68QikXPKTFs7FuP3828gddsMZeye0m8tqKgWkocRoDS6uuPFWrwiTDXr
+zlKQSujTqWDYyaIsBDBAwqnppAHSHXNK/W6C5xSep/0rbIW9zrtmnelGeMpO+Tbf
+Uemj+MTQ7Yx5DLJWp0kyju3HIkb7AgMBAAGjezB5MAkGA1UdEwQCMAAwLAYJYIZI
+AYb4QgENBB8WHU9wZW5TU0wgR2VuZXJhdGVkIENlcnRpZmljYXRlMB0GA1UdDgQW
+BBSsCJ5Wc8R7B6bhdCkDH5+t/tKcpDAfBgNVHSMEGDAWgBTtsZ3ou9kZ4Z415J2p
+aZy3IkEV4zANBgkqhkiG9w0BAQsFAAOCAQEAXtttN4aCKViX4czWuPPuiPLnqMpt
+nUbLQgzTKoKazKGINtEeiNq5/NhMYSpr/oMXXXDfD1GFEOlEObcZ/3Etc6I7GT67
+j4Wpys+vhTDfhG/Cg0eNEVfRg9AlrwMK7Ea1+4vd77+ONhlBqTIaDau2XxckABse
+uK8RW8hx9N21SpSCTWTwzFFaZxyxQx3P+Jsl8tYRjr82qADZIUohRuCDZVMR1UKh
+CsXvyqs6aTv5o1N7M7ja2NYLvNQG+SL8t6u0VK/iwB4+4SsgGMzv64D1bYRupaZ0
+IkkWjskQ1vN+M8hUfuyWxg+ruySa0lV9BEeoZOIf4nplASmTN9apItMVEw==
+-----END CERTIFICATE-----

@@ -5,7 +5,8 @@
  
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
- 
+#include <fstream>  
+#include <streambuf> 
 #include "lib/examples.grpc.pb.h"
 #include "lib/Base64.h" 
 using grpc::Channel;
@@ -20,11 +21,9 @@ class ExampleClient {
   explicit ExampleClient(std::shared_ptr<Channel> channel)
       : stub_(SearchService::NewStub(channel)) {}
  
-  std::string Search(const std::string& user) {
+  std::string Search(SearchRequest request) {
  
-    SearchRequest request;
-    request.set_request(user);
- 
+    
     SearchResponse reply;
    
     ClientContext context;
@@ -101,23 +100,47 @@ int main(int argc, char** argv) {
     return 0;
   }
   
-  ExampleClient client(grpc::CreateChannel(
-      strAddr.c_str(), grpc::InsecureChannelCredentials()));
-  std::string strSplit = "|";
+  // Create a default SSL ChannelCredentials object.
+  std::ifstream skey("server.key");
+  std::string strClientKey((std::istreambuf_iterator<char>(skey)),std::istreambuf_iterator<char>());
+  //std::cout << "key: " <<strClientKey << std::endl;
+  std::ifstream sCrt("server.crt");
+  std::string strClientCert((std::istreambuf_iterator<char>(sCrt)),std::istreambuf_iterator<char>());
+  //std::cout << "crt: " << strClientCert << std::endl;
+  std::ifstream sCaCrt("ca.crt");  
+  std::string strCaCert((std::istreambuf_iterator<char>(sCaCrt)),std::istreambuf_iterator<char>());
+  //std::cout << "ca: " << strClientCert << std::endl;
+  
+  grpc::SslCredentialsOptions ssl_opts;
+  ssl_opts.pem_private_key = strClientKey;
+  ssl_opts.pem_cert_chain = strClientCert;
+  ssl_opts.pem_root_certs=strCaCert;
+  //auto creds = grpc::SslCredentials(grpc::SslCredentialsOptions());
+  auto creds = grpc::SslCredentials(ssl_opts);
+  //auto creds = grpc::GoogleDefaultCredentials();
+  ExampleClient client(grpc::CreateChannel(strAddr.c_str(), creds));
   char szTime[13];
   time_t cTime = time(NULL);
-  sprintf(szTime,"%d",cTime);
-  CBase64 myBase64;
-  char sz64PostStr[2048] = {'\0'};
-  std::string strPostStr = strUser + strSplit + strPasswd + strSplit + strMode + strSplit + szTime;
+  sprintf(szTime,"%d",(int)cTime);
+  
+  SearchRequest request;
+  //request.set_request(user);
+  request.set_struser(strUser);
+  request.set_strpasswd(strPasswd);
+  request.set_strmode(strMode);
+  request.set_strltime(szTime);
+  //CBase64 myBase64;
+  //char sz64PostStr[2048] = {'\0'};
+  //std::string strPostStr = strUser + strSplit + strPasswd + strSplit + strMode + strSplit + szTime;
   //std::cout << "Post string : " << strPostStr << std::endl;
-  myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
-  std::string reply = client.Search(sz64PostStr);  // The actual RPC call!
-  strMode = "0";
-  strPostStr = strUser + strSplit + strPasswd + strSplit + strMode  + strSplit + szTime;
+  //myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
+  std::string reply = client.Search(request);  // The actual RPC call!
+  //strMode = "0";
+  request.set_strmode("0");
+  //strPostStr = strUser + strSplit + strPasswd + strSplit + strMode  + strSplit + szTime;
   //std::cout << "Post string : " << strPostStr << std::endl;
-  memset(sz64PostStr,0x00,2048);
-  myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
+  //memset(sz64PostStr,0x00,2048);
+  //myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
   while ( true )
   {
     if(reply == "RPC failed")
@@ -147,7 +170,7 @@ int main(int argc, char** argv) {
     }
     std::cout << "login susseced! Now keep on login ..." << std::endl;
     sleep(2);
-    reply = client.Search(sz64PostStr);
+    reply = client.Search(request);
   }
  
   return 0;
