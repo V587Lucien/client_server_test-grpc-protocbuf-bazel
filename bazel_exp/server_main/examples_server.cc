@@ -10,6 +10,7 @@
 #include <fstream>
 #include <streambuf>
 #include <vector>
+#include <rpc/des_crypt.h>
 
 #include "lib/examples.grpc.pb.h"
 #include "lib/Base64.h" 
@@ -20,7 +21,8 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-//#define CRYPT_KEY "heigaga"
+#define CRYPT_KEY "heigagar"
+#define ES_USER_PWD "admin:admin@"
 static int kick_time_conf = 0;
 
 typedef struct stClientInfo
@@ -224,7 +226,8 @@ int SearchRequestImpl::deal(stClient clientInfo)
 
 std::string SearchRequestImpl::getStatus(stClient clientInfo)
 {
-  std::string strCode = "curl -s -XGET '";
+  std::string strCode = "curl -s -k -XGET 'https://";
+  strCode += ES_USER_PWD;
   strCode += m_es_url;
   strCode += "/clientinfo/user_log_info/_search' -d '{\"query\":{\"bool\":{\"must\":[{\"match\":{\"user\":\"";
   strCode += clientInfo.szUser;
@@ -253,7 +256,8 @@ std::string SearchRequestImpl::getStatus(stClient clientInfo)
     
 std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
 {
-  std::string strCode = "curl -s -XGET '";
+  std::string strCode = "curl -s -k -XGET 'https://";
+  strCode += ES_USER_PWD;
   strCode += m_es_url;
   strCode += "/clientinfo/userinfo/";
   strCode += clientInfo.szUser;
@@ -267,12 +271,20 @@ std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
     char* pDot = strstr(pBegin,"\"");
     if(!pDot)
       return "";
-    char szPasswd[pDot - pBegin + 1];
-    memset(szPasswd,0x00,pDot-pBegin+1);
+    int iLen = (pDot - pBegin) + 8 - ((pDot - pBegin)%8);
+    char szPasswd[iLen];
+    memset(szPasswd,0x00,iLen);
     strncpy(szPasswd,pBegin,pDot-pBegin);
     char szDecodeData[2048] = {"\0"};
     m_Base64.Decode( szPasswd,(unsigned char*)szDecodeData,2048);
-    return szDecodeData;
+    char szTmp[2048] = {"\0"};
+    int res = cbc_crypt(CRYPT_KEY, szDecodeData, iLen, DES_DECRYPT,szTmp);
+    //printf("==[%s]==[%s]==\n",szTmp,szDecodeData);
+    //return szDecodeData;
+    if(res == DESERR_NONE || res == DESERR_NOHWDEVICE )
+      return szDecodeData;
+    else
+      return "";
   }
   else
     return "";
@@ -280,7 +292,8 @@ std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
 
 std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
 {
-  std::string strCode = "curl -s -XGET '";
+  std::string strCode = "curl -s -k -XGET 'https://";
+  strCode += ES_USER_PWD;
   strCode += m_es_url;
   strCode += "/clientinfo/user_log_info/_search' -d '{\"query\":{\"bool\":{\"must\":[{\"match\":{\"user\":\"";
   strCode += clientInfo.szUser;
@@ -317,7 +330,8 @@ std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
     pDot += 10;
     *pDot = '0';
     std::string strSource = szTmpSource;
-    std::string strCode = "curl -s -XPUT '";
+    std::string strCode = "curl -s -k -XPUT 'https://";
+    strCode += ES_USER_PWD;
     strCode += m_es_url;
     strCode += "/clientinfo/user_log_info/";
     strCode += strId;
@@ -334,7 +348,8 @@ std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
 
 std::string SearchRequestImpl::addNewLoginInfo(stClient clientInfo)
 {
-  std::string strCode = "curl -s -XPOST '";
+  std::string strCode = "curl -s -k -XPOST 'https://";
+  strCode += ES_USER_PWD;
   strCode += m_es_url;
   strCode += "/clientinfo/user_log_info' -d '{\"user\":\"";
   strCode += clientInfo.szUser;
@@ -353,12 +368,18 @@ std::string SearchRequestImpl::addNewLoginInfo(stClient clientInfo)
 
 std::string SearchRequestImpl::addNewUser(stClient clientInfo)
 {
-  std::string strCode = "curl -s -XPUT '";
+  std::string strCode = "curl -s -k -XPUT 'https://";
+  strCode += ES_USER_PWD;
   strCode += m_es_url;
   strCode += "/clientinfo/userinfo/";
   strCode += clientInfo.szUser;
   strCode += "' -d '{\"passwd\":\"";
   char szEncodeData[2048] = {"\0"};
+  //m_Base64.Encode_turn(clientInfo.szPasswd,(unsigned char*)szEncodeData,2048);
+  int iLen = strlen(clientInfo.szPasswd) + 8 - (strlen(clientInfo.szPasswd)%8);
+  int res = cbc_crypt(CRYPT_KEY, clientInfo.szPasswd, iLen, DES_ENCRYPT,szEncodeData);
+  //printf("==[%s]==[%s]==\n",clientInfo.szPasswd,szEncodeData);
+  memset(szEncodeData,0x00,2048);
   m_Base64.Encode_turn(clientInfo.szPasswd,(unsigned char*)szEncodeData,2048);
   strCode += szEncodeData;
   strCode += "\"}'";
@@ -405,7 +426,8 @@ std::string curltool::dealCurlOrder(std::string strCode)
 
 bool createESIndex(std::string strAddr)
 {
-  std::string strCode = "curl -s -XPUT '";
+  std::string strCode = "curl -s -k -XPUT 'https://";
+  strCode += ES_USER_PWD;
   strCode += strAddr + "/clientinfo'";
   
    FILE* fp = popen(strCode.c_str(),"r");
@@ -440,12 +462,14 @@ bool createESIndex(std::string strAddr)
       
     }
   
-  strCode = "curl -XPOST '";
+  strCode = "curl -s -k -XPOST 'https://";
+  strCode += ES_USER_PWD;
   strCode += strAddr + "/clientinfo/userinfo/_mapping' -d '{\"userinfo\":{\"properties\": {\"user\" :{\"type\":\"string\",\"index\":\"not_analyzed\"},\"passwd\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"ip\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"ltime\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"status\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}'";
 
   system(strCode.c_str());
   
-  strCode = "curl -XPOST '";
+  strCode = "curl -s -k -XPOST 'https://";
+  strCode += ES_USER_PWD;
   strCode += strAddr + "/clientinfo/user_log_info//_mapping' -d '{\"user_log_info\":{\"properties\": {\"user\" :{\"type\":\"string\",\"index\":\"not_analyzed\"},\"passwd\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"ip\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"ltime\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"status\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}'";
   
   system(strCode.c_str());
@@ -502,7 +526,8 @@ bool getAllUser(std::string strRes,vct_docinfo& doc_vct)
 
 vct_docinfo getUserOnline(std::string strAddr,std::string strUser = "",std::string strLTime = "")
 {
-  std::string strCode = "curl -s -XGET '";
+  std::string strCode = "curl -s -k -XGET 'https://";
+  strCode += ES_USER_PWD;
   strCode += strAddr;
   strCode += "/clientinfo/user_log_info/_search' -d '{\"query\":{\"bool\":{\"must\":[{\"match\":{\"status\":\"1\"}}";
   if(!strUser.empty())
@@ -663,7 +688,8 @@ void RunServer(std::string strAddr) {
           {
             if(iter->strUser == szCodes[2])
             {
-              std::string strCode = "curl -s -XPUT '";
+              std::string strCode = "curl -s -k -XPUT 'https://";
+              strCode += ES_USER_PWD;
               strCode += strAddr;
               strCode += "/clientinfo/user_log_info/";
               strCode += iter->strId;
@@ -686,7 +712,8 @@ void RunServer(std::string strAddr) {
         vct_docinfo_iter iter = user_vct.begin();
         for(;iter!= user_vct.end();iter++)
         {
-          std::string strCode = "curl -s -XPUT '";
+          std::string strCode = "curl -s -k -XPUT 'https://";
+          strCode += ES_USER_PWD;
           strCode += strAddr;
           strCode += "/clientinfo/user_log_info/";
           strCode += iter->strId;
@@ -703,7 +730,8 @@ void RunServer(std::string strAddr) {
         vct_docinfo_iter iter = user_vct.begin();
         for(;iter!= user_vct.end();iter++)
         {
-          std::string strCode = "curl -s -XPUT '";
+          std::string strCode = "curl -s -k -XPUT 'https://";
+          strCode += ES_USER_PWD;
           strCode += strAddr;
           strCode += "/clientinfo/user_log_info/";
           strCode += iter->strId;
@@ -745,7 +773,8 @@ void* backround(void* param)
       vct_docinfo_iter iter = user_vct.begin();
       for(;iter!= user_vct.end();iter++)
       {
-        std::string strCode = "curl -s -XPUT '";
+        std::string strCode = "curl -s -k -XPUT 'https://";
+        strCode += ES_USER_PWD;
         strCode += strAddr;
         strCode += "/clientinfo/user_log_info/";
         strCode += iter->strId;

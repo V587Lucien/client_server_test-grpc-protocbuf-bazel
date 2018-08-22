@@ -1,3 +1,10 @@
+2018-08-22:
+1，server端敏感信息使用DES加密后进行存储
+2，server端与es数据库数据交互改为ssl/tls模式
+3，es数据库增加身份校验
+
+
+2018-08-18:
 1，使用 ssl/tls加密，需要注意证书必须放到运行目录。client向server发送请求信息不再使用base64加密，server端存储密码时仍保持使用base64转换密码并存储。
 2，server端增加互斥锁，保证线程安全
 3，client通过protobuf结构化表达方式传数据，server端进行相应的解析
