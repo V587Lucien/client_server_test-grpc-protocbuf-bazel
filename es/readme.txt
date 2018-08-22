@@ -1,0 +1,1 @@
+jks证书已经生成并完成配置，修改elasticsearch-2.4.1/config/elasticsearch.yml 相关的ip配置即可。
