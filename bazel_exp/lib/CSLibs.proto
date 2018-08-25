@@ -1,0 +1,22 @@
+        syntax = "proto3";
+ 
+	message ClientRequestParams
+	{
+		string Request = 1;
+		string strUser = 2;
+		string strPasswd = 3;
+		string strLTime = 4;
+		string strMode = 5;
+	}
+ 
+	message ServerResponse
+	{
+		string Response = 1;
+	}
+ 
+	service ServerService {
+  		rpc userLogin (ClientRequestParams) returns (ServerResponse);
+  		rpc userSignUp (ClientRequestParams) returns (ServerResponse);
+  		rpc getUserLoginStatus (ClientRequestParams) returns (ServerResponse);
+  		rpc userLoginOut (ClientRequestParams) returns (ServerResponse);
+	}

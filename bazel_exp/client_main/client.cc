@@ -7,7 +7,7 @@
 #include <grpc/support/log.h>
 #include <fstream>  
 #include <streambuf> 
-#include "lib/examples.grpc.pb.h"
+#include "lib/CSLibs.grpc.pb.h"
 #include "lib/Base64.h" 
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
@@ -16,15 +16,15 @@ using grpc::CompletionQueue;
 using grpc::Status;
  
  
-class ExampleClient {
+class ClientImpl {
  public:
-  explicit ExampleClient(std::shared_ptr<Channel> channel)
-      : stub_(SearchService::NewStub(channel)) {}
+  explicit ClientImpl(std::shared_ptr<Channel> channel)
+      : stub_(ServerService::NewStub(channel)) {}
  
-  std::string Search(SearchRequest request) {
+  std::string userLogin(ClientRequestParams request) {
  
     
-    SearchResponse reply;
+    ServerResponse reply;
    
     ClientContext context;
  
@@ -32,8 +32,8 @@ class ExampleClient {
  
     Status status;
  
-    std::unique_ptr<ClientAsyncResponseReader<SearchResponse> > rpc(
-        stub_->AsyncSearch(&context, request, &cq));
+    std::unique_ptr<ClientAsyncResponseReader<ServerResponse> > rpc(
+        stub_->AsyncuserLogin(&context, request, &cq));
  
     rpc->Finish(&reply, &status, (void*)1);
     void* got_tag;
@@ -52,10 +52,108 @@ class ExampleClient {
       return "RPC failed";
     }
   }
+  
+  std::string userSignUp(ClientRequestParams request) {
+ 
+    
+    ServerResponse reply;
+   
+    ClientContext context;
+ 
+    CompletionQueue cq;
+ 
+    Status status;
+ 
+    std::unique_ptr<ClientAsyncResponseReader<ServerResponse> > rpc(
+        stub_->AsyncuserSignUp(&context, request, &cq));
+ 
+    rpc->Finish(&reply, &status, (void*)1);
+    void* got_tag;
+    bool ok = false;
+  
+    GPR_ASSERT(cq.Next(&got_tag, &ok));
+ 
+   
+    GPR_ASSERT(got_tag == (void*)1);
+  
+    GPR_ASSERT(ok);
+ 
+    if (status.ok()) {
+      return reply.response();
+    } else {
+      return "RPC failed";
+    }
+  }
+  
+  std::string getUserLoginStatus(ClientRequestParams request) {
+ 
+    
+    ServerResponse reply;
+   
+    ClientContext context;
+ 
+    CompletionQueue cq;
+ 
+    Status status;
+ 
+    std::unique_ptr<ClientAsyncResponseReader<ServerResponse> > rpc(
+        stub_->AsyncgetUserLoginStatus(&context, request, &cq));
+ 
+    rpc->Finish(&reply, &status, (void*)1);
+    void* got_tag;
+    bool ok = false;
+  
+    GPR_ASSERT(cq.Next(&got_tag, &ok));
+ 
+   
+    GPR_ASSERT(got_tag == (void*)1);
+  
+    GPR_ASSERT(ok);
+ 
+    if (status.ok()) {
+      return reply.response();
+    } else {
+      return "RPC failed";
+    }
+  }
+
+  std::string userLoginOut(ClientRequestParams request) {
+ 
+    
+    ServerResponse reply;
+   
+    ClientContext context;
+ 
+    CompletionQueue cq;
+ 
+    Status status;
+ 
+    std::unique_ptr<ClientAsyncResponseReader<ServerResponse> > rpc(
+        stub_->AsyncuserLoginOut(&context, request, &cq));
+ 
+    rpc->Finish(&reply, &status, (void*)1);
+    void* got_tag;
+    bool ok = false;
+  
+    GPR_ASSERT(cq.Next(&got_tag, &ok));
+ 
+   
+    GPR_ASSERT(got_tag == (void*)1);
+  
+    GPR_ASSERT(ok);
+ 
+    if (status.ok()) {
+      return reply.response();
+    } else {
+      return "RPC failed";
+    }
+  }
+
+
  
  private:
  
-  std::unique_ptr<SearchService::Stub> stub_;
+  std::unique_ptr<ServerService::Stub> stub_;
 };
  
 int main(int argc, char** argv) {
@@ -118,29 +216,30 @@ int main(int argc, char** argv) {
   //auto creds = grpc::SslCredentials(grpc::SslCredentialsOptions());
   auto creds = grpc::SslCredentials(ssl_opts);
   //auto creds = grpc::GoogleDefaultCredentials();
-  ExampleClient client(grpc::CreateChannel(strAddr.c_str(), creds));
+  ClientImpl client(grpc::CreateChannel(strAddr.c_str(), creds));
   char szTime[13];
   time_t cTime = time(NULL);
   sprintf(szTime,"%d",(int)cTime);
   
-  SearchRequest request;
+  ClientRequestParams request;
   //request.set_request(user);
   request.set_struser(strUser);
   request.set_strpasswd(strPasswd);
   request.set_strmode(strMode);
   request.set_strltime(szTime);
-  //CBase64 myBase64;
-  //char sz64PostStr[2048] = {'\0'};
-  //std::string strPostStr = strUser + strSplit + strPasswd + strSplit + strMode + strSplit + szTime;
-  //std::cout << "Post string : " << strPostStr << std::endl;
-  //myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
-  std::string reply = client.Search(request);  // The actual RPC call!
-  //strMode = "0";
-  request.set_strmode("0");
-  //strPostStr = strUser + strSplit + strPasswd + strSplit + strMode  + strSplit + szTime;
-  //std::cout << "Post string : " << strPostStr << std::endl;
-  //memset(sz64PostStr,0x00,2048);
-  //myBase64.Encode_turn(strPostStr.c_str(),(unsigned char*)sz64PostStr,2048);
+  std::string reply;
+  if( request.strmode() == "1")
+  {  
+    reply = client.userSignUp(request);  // The actual RPC call!
+    //request.set_strmode("0");
+  }
+  else if( request.strmode() == "0" )
+    reply = client.userLogin(request);
+  else
+  {
+    printf("unknown mode , please check your mode param again:\n  mode = 1 :new user sign up\n  mode = 0 : user login\n");
+    return 0;
+  }
   while ( true )
   {
     if(reply == "RPC failed")
@@ -157,6 +256,8 @@ int main(int argc, char** argv) {
     else if( reply == "1" )
     {
       std::cout << "user: " << strUser << " sign up susseced ! Now login ..." << std::endl;
+      reply = client.userLogin(request);
+      continue; //must continue , reply may be 0
     }
     else if( reply == "2" )
     {
@@ -170,7 +271,7 @@ int main(int argc, char** argv) {
     }
     std::cout << "login susseced! Now keep on login ..." << std::endl;
     sleep(2);
-    reply = client.Search(request);
+    reply = client.getUserLoginStatus(request);
   }
  
   return 0;

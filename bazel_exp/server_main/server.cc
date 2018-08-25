@@ -12,7 +12,7 @@
 #include <vector>
 #include <rpc/des_crypt.h>
 
-#include "lib/examples.grpc.pb.h"
+#include "lib/CSLibs.grpc.pb.h"
 #include "lib/Base64.h" 
 #include "lib/Lock.h"
 
@@ -74,9 +74,9 @@ public:
   std::string dealCurlOrder(std::string strCode);
 };
  
-class SearchRequestImpl final : public SearchService::Service {
-  Status Search(ServerContext* context, const SearchRequest* request,
-                  SearchResponse* reply) override {
+class ServerImpl final : public ServerService::Service {
+  Status userLogin(ServerContext* context, const ClientRequestParams* request,
+                  ServerResponse* reply) override {
     //对被保护资源自动加锁
 	  //函数结束前，自动解锁
 	  //printf("===[ lock ]===\n");
@@ -87,13 +87,86 @@ class SearchRequestImpl final : public SearchService::Service {
     //std::cout << "get string : " << szDecodeData << std::endl;
     std::string strClientAddr = context->peer();
     //std::cout << "connect : " << strClientAddr << std::endl;
-    int res = dealPostString(request,strClientAddr);
+    //int res = dealPostString(request,strClientAddr);
+    stClient clientInfo;
+    getClientInfo(request,strClientAddr,clientInfo);
+    int res = dealUserLogin(clientInfo);
     char szResponse[2];
     sprintf(szResponse,"%d",res);
     reply->set_response(szResponse);
     //printf("===[ unlock ]===\n");
     return Status::OK;
   }
+  
+  Status userSignUp(ServerContext* context, const ClientRequestParams* request,
+                  ServerResponse* reply) override {
+    //对被保护资源自动加锁
+	  //函数结束前，自动解锁
+	  //printf("===[ lock ]===\n");
+	  CMyLock lock(g_Lock);
+
+    //char szDecodeData[2048] = {"\0"};
+    //m_Base64.Decode( (request->request()).c_str(),(unsigned char*)szDecodeData,2048);
+    //std::cout << "get string : " << szDecodeData << std::endl;
+    std::string strClientAddr = context->peer();
+    //std::cout << "connect : " << strClientAddr << std::endl;
+    //int res = dealPostString(request,strClientAddr);
+    stClient clientInfo;
+    getClientInfo(request,strClientAddr,clientInfo);
+    int res = dealUserSignUp(clientInfo);
+    char szResponse[2];
+    sprintf(szResponse,"%d",res);
+    reply->set_response(szResponse);
+    //printf("===[ unlock ]===\n");
+    return Status::OK;
+  }
+  
+  Status getUserLoginStatus(ServerContext* context, const ClientRequestParams* request,
+                  ServerResponse* reply) override {
+    //对被保护资源自动加锁
+	  //函数结束前，自动解锁
+	  //printf("===[ lock ]===\n");
+	  CMyLock lock(g_Lock);
+
+    //char szDecodeData[2048] = {"\0"};
+    //m_Base64.Decode( (request->request()).c_str(),(unsigned char*)szDecodeData,2048);
+    //std::cout << "get string : " << szDecodeData << std::endl;
+    std::string strClientAddr = context->peer();
+    //std::cout << "connect : " << strClientAddr << std::endl;
+    //int res = dealPostString(request,strClientAddr);
+    stClient clientInfo;
+    getClientInfo(request,strClientAddr,clientInfo);
+    int res = dealGetUserLoginStatus(clientInfo);
+    char szResponse[2];
+    sprintf(szResponse,"%d",res);
+    reply->set_response(szResponse);
+    //printf("===[ unlock ]===\n");
+    return Status::OK;
+  }
+  
+  Status userLoginOut(ServerContext* context, const ClientRequestParams* request,
+                  ServerResponse* reply) override {
+    //对被保护资源自动加锁
+	  //函数结束前，自动解锁
+	  //printf("===[ lock ]===\n");
+	  CMyLock lock(g_Lock);
+
+    //char szDecodeData[2048] = {"\0"};
+    //m_Base64.Decode( (request->request()).c_str(),(unsigned char*)szDecodeData,2048);
+    //std::cout << "get string : " << szDecodeData << std::endl;
+    std::string strClientAddr = context->peer();
+    //std::cout << "connect : " << strClientAddr << std::endl;
+    //int res = dealPostString(request,strClientAddr);
+    stClient clientInfo;
+    getClientInfo(request,strClientAddr,clientInfo);
+    int res = dealUserLoginOut(clientInfo);
+    char szResponse[2];
+    sprintf(szResponse,"%d",res);
+    reply->set_response(szResponse);
+    //printf("===[ unlock ]===\n");
+    return Status::OK;
+  }
+
 
 //new functions for server  
 public:
@@ -103,9 +176,14 @@ private:
   std::string m_es_url;
   CBase64 m_Base64;
   curltool tools;
-  int dealPostString(const SearchRequest* request,std::string strClientAddr);
-  int getClientInfo(const SearchRequest* request,std::string strClientAddr,stClient& clientInfo);
+  int dealPostString(const ClientRequestParams* request,std::string strClientAddr);
+  int getClientInfo(const ClientRequestParams* request,std::string strClientAddr,stClient& clientInfo);
   int deal(stClient clientInfo);
+  int dealUserSignUp(stClient clientInfo);
+  int dealUserLogin(stClient clientInfo);
+  int dealGetUserLoginStatus(stClient clientInfo);
+  int dealUserLoginOut(stClient clientInfo);
+
   std::string getStatus(stClient clientInfo);
   std::string getUserPasswd(stClient clientInfo);
   std::string kickOffOldUser(stClient clientInfo);
@@ -113,12 +191,12 @@ private:
   std::string addNewUser(stClient clientInfo);
 };
  
-int SearchRequestImpl::setDBip(std::string strAddr)
+int ServerImpl::setDBip(std::string strAddr)
 {
   m_es_url = strAddr;
   return 0;
 }
-int SearchRequestImpl::dealPostString(const SearchRequest* request,std::string strClientAddr)
+int ServerImpl::dealPostString(const ClientRequestParams* request,std::string strClientAddr)
 {
   int res = 0;
   stClient clientInfo;
@@ -136,7 +214,7 @@ int SearchRequestImpl::dealPostString(const SearchRequest* request,std::string s
   return res;
 }
 
-int SearchRequestImpl::getClientInfo(const SearchRequest* request,std::string strClientAddr,stClient& clientInfo)
+int ServerImpl::getClientInfo(const ClientRequestParams* request,std::string strClientAddr,stClient& clientInfo)
 {
   if(request == NULL)
     return -1;
@@ -155,7 +233,7 @@ int SearchRequestImpl::getClientInfo(const SearchRequest* request,std::string st
   return 0;
 }
 
-/*int SearchRequestImpl::getClientInfo(const char* szPostString,std::string strClientAddr,stClient& clientInfo)
+/*int ServerImpl::getClientInfo(const char* szPostString,std::string strClientAddr,stClient& clientInfo)
 {
   if(szPostString == NULL)
     return -1;
@@ -169,7 +247,7 @@ int SearchRequestImpl::getClientInfo(const SearchRequest* request,std::string st
   return 0;
 }*/
 
-int SearchRequestImpl::deal(stClient clientInfo)
+int ServerImpl::deal(stClient clientInfo)
 {
   
   //first check if user in table,if not and mode = 1 , create
@@ -224,7 +302,108 @@ int SearchRequestImpl::deal(stClient clientInfo)
   }
 }
 
-std::string SearchRequestImpl::getStatus(stClient clientInfo)
+int ServerImpl::dealUserSignUp(stClient clientInfo)
+{
+  std::string strPasswd = getUserPasswd(clientInfo);
+  if (!strPasswd.empty())
+  {
+    return 2;
+  }
+  else
+  {
+    // try sign up
+    std::string strRes = addNewUser(clientInfo);
+    return atoi(strRes.c_str());  // 1 sign up susseced
+  }
+}
+
+int ServerImpl::dealUserLogin(stClient clientInfo)
+{
+  std::string strPasswd = getUserPasswd(clientInfo);
+  if (!strPasswd.empty())
+  {  
+    if( strPasswd == clientInfo.szPasswd )
+    {
+      //check login info
+      std::string strStatus = getStatus(clientInfo);
+      if(!strStatus.empty())
+      {
+        if( strStatus  ==  "0" )
+          return 0;
+        else
+        {
+          return 4;
+        }
+      }
+      else
+      {
+        kickOffOldUser(clientInfo);
+        addNewLoginInfo(clientInfo);
+        return 4;
+      }
+    }
+    else
+      return 3;
+  }
+  else
+  {
+    return 3;  //sign up first,refused
+  }
+}
+
+int ServerImpl::dealGetUserLoginStatus(stClient clientInfo)
+{
+  std::string strPasswd = getUserPasswd(clientInfo);
+  if (!strPasswd.empty())
+  {  
+    if( strPasswd == clientInfo.szPasswd )
+    {
+      //check login info
+      std::string strStatus = getStatus(clientInfo);
+      if(!strStatus.empty())
+      {
+        if( strStatus  ==  "0" )
+          return 0;
+        else
+        {
+          return 4;
+        }
+      }
+      else
+      {
+        return 0;
+      }
+    }
+    else
+      return 3;
+  }
+  else
+  {
+    return 3;  //sign up first,refused
+  }
+}
+
+int ServerImpl::dealUserLoginOut(stClient clientInfo)
+{
+  std::string strPasswd = getUserPasswd(clientInfo);
+  if (!strPasswd.empty())
+  {  
+    if( strPasswd == clientInfo.szPasswd )
+      {
+        kickOffOldUser(clientInfo);
+        return 0;
+        
+      }
+      else
+        return 3;
+  }
+  else
+  {
+    return 3;  //sign up first,refused
+  }
+}
+
+std::string ServerImpl::getStatus(stClient clientInfo)
 {
   std::string strCode = "curl -s -k -XGET 'https://";
   strCode += ES_USER_PWD;
@@ -254,7 +433,7 @@ std::string SearchRequestImpl::getStatus(stClient clientInfo)
     return "";
 }
     
-std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
+std::string ServerImpl::getUserPasswd(stClient clientInfo)
 {
   std::string strCode = "curl -s -k -XGET 'https://";
   strCode += ES_USER_PWD;
@@ -290,7 +469,7 @@ std::string SearchRequestImpl::getUserPasswd(stClient clientInfo)
     return "";
 }
 
-std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
+std::string ServerImpl::kickOffOldUser(stClient clientInfo)
 {
   std::string strCode = "curl -s -k -XGET 'https://";
   strCode += ES_USER_PWD;
@@ -346,7 +525,7 @@ std::string SearchRequestImpl::kickOffOldUser(stClient clientInfo)
   
 }
 
-std::string SearchRequestImpl::addNewLoginInfo(stClient clientInfo)
+std::string ServerImpl::addNewLoginInfo(stClient clientInfo)
 {
   std::string strCode = "curl -s -k -XPOST 'https://";
   strCode += ES_USER_PWD;
@@ -366,7 +545,7 @@ std::string SearchRequestImpl::addNewLoginInfo(stClient clientInfo)
   return strRes;
 }
 
-std::string SearchRequestImpl::addNewUser(stClient clientInfo)
+std::string ServerImpl::addNewUser(stClient clientInfo)
 {
   std::string strCode = "curl -s -k -XPUT 'https://";
   strCode += ES_USER_PWD;
@@ -560,7 +739,7 @@ void RunServer(std::string strAddr) {
     return ;
   }
   std::string server_address("0.0.0.0:50051");
-  SearchRequestImpl service;
+  ServerImpl service;
   service.setDBip(strAddr);
   ServerBuilder builder;
   
