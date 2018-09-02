@@ -7,14 +7,17 @@
 #include <grpc/support/log.h>
 #include <fstream>  
 #include <streambuf> 
+#include <grpcpp/impl/codegen/sync_stream.h>
+
 #include "lib/CSLibs.grpc.pb.h"
 #include "lib/Base64.h" 
+
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
 using grpc::ClientContext;
 using grpc::CompletionQueue;
 using grpc::Status;
- 
+
  
 class ClientImpl {
  public:
@@ -149,13 +152,68 @@ class ClientImpl {
     }
   }
 
-
+  std::string waitForOffLineSignal(ClientRequestParams request)
+  {
+    ServerResponse reply;
+   
+    ClientContext context;
+ 
+    Status status;
+    std::unique_ptr<grpc::ClientReaderWriter<ClientRequestParams,ServerResponse> > stream(stub_->waitForOffLine(&context));
+    stream->Write(request);
+    while (stream->Read(&reply)) {
+      if( reply.response() == "0")
+      {
+        request.set_strmode("-1");
+        stream->Write(request);  
+        stream->WritesDone();
+      }
+      else
+      {
+        stream->Write(request); 
+      }
+      //std::cout << "Found reply called " <<  reply.response()<< std::endl;
+    }
+    status = stream->Finish();
+    if(status.ok())
+      return reply.response();
+    else {
+      return "RPC failed";
+    }
+  }
  
  private:
  
   std::unique_ptr<ServerService::Stub> stub_;
 };
- 
+
+typedef struct threadParams
+{
+  ClientImpl* client;
+  //ClientRequestParams request;
+  std::string strUser;
+  std::string strPasswd;
+  std::string strMode;
+  std::string strTime;
+
+}TParams,*PTParams; 
+
+void* waitForSignalFromServer(void* param) 
+{
+  PTParams ptparams = (PTParams)param;
+  ClientRequestParams request;
+  request.set_struser(ptparams->strUser);
+  request.set_strpasswd(ptparams->strPasswd);
+  request.set_strmode(ptparams->strMode);
+  request.set_strltime(ptparams->strTime);
+  std::string strRes = ptparams->client->waitForOffLineSignal(request);
+  if(strRes == "0")
+    printf("Connect refused by server! Reason: This user had logined on another machion!\n");
+  else
+    printf("%s\n",strRes.c_str());
+  return NULL;
+}
+
 int main(int argc, char** argv) {
  
   int ch;
@@ -240,18 +298,21 @@ int main(int argc, char** argv) {
     printf("unknown mode , please check your mode param again:\n  mode = 1 :new user sign up\n  mode = 0 : user login\n");
     return 0;
   }
+  
   while ( true )
   {
     if(reply == "RPC failed")
     {
       std::cout << reply << std::endl;
-      break;
+      //break;
+      return 0;
     }
     
     if( reply == "0" )
     {
       std::cout << "Connect refused by server! Reason: This user had logined on another machion!" << std::endl;
-      break;
+      //break;
+      return 0;
     }
     else if( reply == "1" )
     {
@@ -262,18 +323,43 @@ int main(int argc, char** argv) {
     else if( reply == "2" )
     {
       std::cout << "sign up faild! Please try again!" << std::endl;
-      break;
+      //break;
+      return 0;
     }
     else if(reply == "3")
     {
       std::cout << "login faild ! User or Password is wrong !" << std::endl;
-        break;
+      //break;
+      return 0;
     }
     std::cout << "login susseced! Now keep on login ..." << std::endl;
-    sleep(2);
-    reply = client.getUserLoginStatus(request);
+    break;
+    //sleep(2);
+    //reply = client.getUserLoginStatus(request);
   }
- 
+  //create thread wait for kickoff signal
+  TParams tparams;
+  tparams.client = &client;
+  tparams.strUser = strUser;
+  tparams.strPasswd = strPasswd;
+  tparams.strMode = strMode;
+  tparams.strTime = szTime;
+  waitForSignalFromServer((void*) &tparams );
+  /*pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED );
+  printf("===[%d]==\n",__LINE__);  
+  pthread_t tThreadT;
+	if (pthread_create(&tThreadT, &attr, waitForSignalFromServer,(void*) &tparams ))
+	{
+		printf("开启强制下线消息接收线程失败\n");
+		return 0;
+	}
+	printf("===[%d]==\n",__LINE__);
+	pthread_join(tThreadT,NULL);
+	printf("===[%d]==\n",__LINE__);
+  pthread_attr_destroy(&attr);*/
   return 0;
 }
 

@@ -118,16 +118,17 @@ void AddDescriptorsImpl() {
       "\007Request\030\001 \001(\t\022\017\n\007strUser\030\002 \001(\t\022\021\n\tstrPa"
       "sswd\030\003 \001(\t\022\020\n\010strLTime\030\004 \001(\t\022\017\n\007strMode\030"
       "\005 \001(\t\"\"\n\016ServerResponse\022\020\n\010Response\030\001 \001("
-      "\t2\354\001\n\rServerService\0222\n\tuserLogin\022\024.Clien"
+      "\t2\251\002\n\rServerService\0222\n\tuserLogin\022\024.Clien"
       "tRequestParams\032\017.ServerResponse\0223\n\nuserS"
       "ignUp\022\024.ClientRequestParams\032\017.ServerResp"
       "onse\022;\n\022getUserLoginStatus\022\024.ClientReque"
       "stParams\032\017.ServerResponse\0225\n\014userLoginOu"
       "t\022\024.ClientRequestParams\032\017.ServerResponse"
-      "b\006proto3"
+      "\022;\n\016waitForOffLine\022\024.ClientRequestParams"
+      "\032\017.ServerResponse(\0010\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 408);
+      descriptor, 469);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "CSLibs.proto", &protobuf_RegisterTypes);
 }

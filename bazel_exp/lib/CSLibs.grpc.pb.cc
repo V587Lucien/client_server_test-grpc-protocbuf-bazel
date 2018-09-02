@@ -19,6 +19,7 @@ static const char* ServerService_method_names[] = {
   "/ServerService/userSignUp",
   "/ServerService/getUserLoginStatus",
   "/ServerService/userLoginOut",
+  "/ServerService/waitForOffLine",
 };
 
 std::unique_ptr< ServerService::Stub> ServerService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -32,6 +33,7 @@ ServerService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& chan
   , rpcmethod_userSignUp_(ServerService_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_getUserLoginStatus_(ServerService_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_userLoginOut_(ServerService_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_waitForOffLine_(ServerService_method_names[4], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
   {}
 
 ::grpc::Status ServerService::Stub::userLogin(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::ServerResponse* response) {
@@ -82,6 +84,18 @@ ServerService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& chan
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::ServerResponse>::Create(channel_.get(), cq, rpcmethod_userLoginOut_, context, request, false);
 }
 
+::grpc::ClientReaderWriter< ::ClientRequestParams, ::ServerResponse>* ServerService::Stub::waitForOffLineRaw(::grpc::ClientContext* context) {
+  return ::grpc::internal::ClientReaderWriterFactory< ::ClientRequestParams, ::ServerResponse>::Create(channel_.get(), rpcmethod_waitForOffLine_, context);
+}
+
+::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>* ServerService::Stub::AsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::ClientRequestParams, ::ServerResponse>::Create(channel_.get(), cq, rpcmethod_waitForOffLine_, context, true, tag);
+}
+
+::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>* ServerService::Stub::PrepareAsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::ClientRequestParams, ::ServerResponse>::Create(channel_.get(), cq, rpcmethod_waitForOffLine_, context, false, nullptr);
+}
+
 ServerService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       ServerService_method_names[0],
@@ -103,6 +117,11 @@ ServerService::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< ServerService::Service, ::ClientRequestParams, ::ServerResponse>(
           std::mem_fn(&ServerService::Service::userLoginOut), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      ServerService_method_names[4],
+      ::grpc::internal::RpcMethod::BIDI_STREAMING,
+      new ::grpc::internal::BidiStreamingHandler< ServerService::Service, ::ClientRequestParams, ::ServerResponse>(
+          std::mem_fn(&ServerService::Service::waitForOffLine), this)));
 }
 
 ServerService::Service::~Service() {
@@ -133,6 +152,12 @@ ServerService::Service::~Service() {
   (void) context;
   (void) request;
   (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status ServerService::Service::waitForOffLine(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream) {
+  (void) context;
+  (void) stream;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

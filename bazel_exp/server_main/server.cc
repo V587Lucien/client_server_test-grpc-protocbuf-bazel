@@ -11,6 +11,7 @@
 #include <streambuf>
 #include <vector>
 #include <rpc/des_crypt.h>
+#include <grpcpp/impl/codegen/sync_stream.h>
 
 #include "lib/CSLibs.grpc.pb.h"
 #include "lib/Base64.h" 
@@ -51,17 +52,22 @@ typedef struct EsdocInfo
   std::string strId;
   std::string strUser;
   std::string strSource;
+  std::string strIp;
+  std::string strLTime;
   EsdocInfo()
   {
     strId = "";
     strUser = "";
     strSource = "";
+    strIp = "";
+    strLTime = "";
   }
 }docinfo;
 
-typedef std::vector<docinfo> vct_docinfo;
-typedef vct_docinfo::iterator vct_docinfo_iter;
-  
+
+typedef std::map<std::string , grpc::ServerReaderWriter<ServerResponse,ClientRequestParams>*>  map_userStreamHandle;
+typedef map_userStreamHandle::iterator map_userStreamHandle_iter;
+
 //创建一个互斥锁
 CMutex g_Lock;  //for db
 CMutex g_sLock; //for static
@@ -167,15 +173,45 @@ class ServerImpl final : public ServerService::Service {
     return Status::OK;
   }
 
-
+  Status waitForOffLine(ServerContext* context, grpc::ServerReaderWriter<ServerResponse,ClientRequestParams>* stream) override {
+    std::string strClientAddr = context->peer();
+    ClientRequestParams request;
+    stClient clientInfo;
+    std::string strUkey;
+    while (stream->Read(&request))
+    {
+      getClientInfo(&request,strClientAddr,clientInfo);
+      if(strcmp(clientInfo.szMode,"-1") == 0 )
+        continue;
+      //put writer in map
+      strUkey = request.struser();
+      strUkey += clientInfo.szClientIp;
+      strUkey += clientInfo.szCTime;
+      map_userStreamHandle_iter iter = m_userStreamHandles.find(strUkey);
+      if( iter == m_userStreamHandles.end())
+        m_userStreamHandles.insert(std::pair<std::string, grpc::ServerReaderWriter<ServerResponse,ClientRequestParams>*>(strUkey,stream));
+      else
+        iter->second = stream;
+      //wait for end
+    }
+    //printf("===[%d]==[%s]===\n",__LINE__,(request.struser()).c_str());
+    //client die, update user_log_info status and erase user_stream
+    kickoffUserWithoutSendSignal(clientInfo);
+    m_userStreamHandles.erase(strUkey);
+    return Status::OK;
+  }
 //new functions for server  
 public:
   int setDBip(std::string strAddr);
+  std::string sendOffLineSignalToClientByUser(std::string strUkey);
   
 private:
   std::string m_es_url;
   CBase64 m_Base64;
   curltool tools;
+  
+  map_userStreamHandle m_userStreamHandles;
+  
   int dealPostString(const ClientRequestParams* request,std::string strClientAddr);
   int getClientInfo(const ClientRequestParams* request,std::string strClientAddr,stClient& clientInfo);
   int deal(stClient clientInfo);
@@ -189,8 +225,18 @@ private:
   std::string kickOffOldUser(stClient clientInfo);
   std::string addNewLoginInfo(stClient clientInfo);
   std::string addNewUser(stClient clientInfo);
+  void kickoffUserWithoutSendSignal(stClient clientInfo);
 };
- 
+
+
+typedef struct st_thread_params
+{
+  ServerImpl* service;
+  std::string strAddr;
+}TParams,*PTParams;
+typedef std::vector<docinfo> vct_docinfo;
+typedef vct_docinfo::iterator vct_docinfo_iter;
+   
 int ServerImpl::setDBip(std::string strAddr)
 {
   m_es_url = strAddr;
@@ -391,6 +437,7 @@ int ServerImpl::dealUserLoginOut(stClient clientInfo)
     if( strPasswd == clientInfo.szPasswd )
       {
         kickOffOldUser(clientInfo);
+        //call client, m_userStreamHandles erase user
         return 0;
         
       }
@@ -495,6 +542,8 @@ std::string ServerImpl::kickOffOldUser(stClient clientInfo)
     if(pBegin == NULL)
       return "3";
     pBegin += 10;
+    char* pSource = pBegin;
+   
     pDot = strstr(pBegin,"}");
     if(!pDot)
       return "3";
@@ -508,6 +557,42 @@ std::string ServerImpl::kickOffOldUser(stClient clientInfo)
     // status 1 -> status 0
     pDot += 10;
     *pDot = '0';
+    
+    
+    pBegin = strstr(pSource,"\"user\":\"");
+    if(pBegin == NULL)
+      return "3";
+    pBegin += 8;
+    char* pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      return "3";
+    char szUser[pEnd-pBegin+1];
+    memset(szUser,0x00,pEnd-pBegin+1);
+    memcpy(szUser,pBegin,pEnd-pBegin);
+    
+    pBegin = strstr(pSource,"\"ip\":\"");
+    if(pBegin == NULL)
+      return "3";
+    pBegin += 6;
+    pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      return "3";
+    char szIp[pEnd-pBegin+1];
+    memset(szIp,0x00,pEnd-pBegin+1);
+    memcpy(szIp,pBegin,pEnd-pBegin);
+    
+    pBegin = strstr(pSource,"\"ltime\":\"");
+    if(pBegin == NULL)
+      return "3";
+    pBegin += 9;
+    pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      return "3";
+    char szLTime[pEnd-pBegin+1];
+    memset(szLTime,0x00,pEnd-pBegin+1);
+    memcpy(szLTime,pBegin,pEnd-pBegin);
+    
+    
     std::string strSource = szTmpSource;
     std::string strCode = "curl -s -k -XPUT 'https://";
     strCode += ES_USER_PWD;
@@ -518,6 +603,12 @@ std::string ServerImpl::kickOffOldUser(stClient clientInfo)
     strCode += strSource;
     strCode += "'";
     strRes = tools.dealCurlOrder(strCode);
+    //call client, m_userStreamHandles erase user
+    std::string strUkey = szUser;
+    strUkey += szIp;
+    strUkey += szLTime;
+    //printf("===[%d]===\n",__LINE__);
+    sendOffLineSignalToClientByUser(strUkey);
     return "2";
   }
   else
@@ -539,7 +630,10 @@ std::string ServerImpl::addNewLoginInfo(stClient clientInfo)
   strCode += "\",\"status\":\"1\"}'";
   std::string strRes = tools.dealCurlOrder(strCode);
   if(strstr(strRes.c_str(),"successful\":1"))
+  {
     strRes = "1";
+    //m_userStreamHandles insert user
+  }
   else
     strRes = "5"; //connect db failed
   return strRes;
@@ -568,6 +662,79 @@ std::string ServerImpl::addNewUser(stClient clientInfo)
   else
     strRes = "2"; //sign up failed
   return strRes;
+}
+
+std::string ServerImpl::sendOffLineSignalToClientByUser(std::string strUkey)
+{
+  std::string strRes = "";
+  //CMyLock lock(g_Lock);
+  map_userStreamHandle_iter iter = m_userStreamHandles.find(strUkey);
+  if( iter != m_userStreamHandles.end())
+  {
+    ServerResponse reply;
+    reply.set_response("0");
+    iter->second->Write(reply);
+  }
+  return strRes;
+}
+
+void ServerImpl::kickoffUserWithoutSendSignal(stClient clientInfo)
+{
+  std::string strCode = "curl -s -k -XGET 'https://";
+  strCode += ES_USER_PWD;
+  strCode += m_es_url;
+  strCode += "/clientinfo/user_log_info/_search' -d '{\"query\":{\"bool\":{\"must\":[{\"match\":{\"user\":\"";
+  strCode += clientInfo.szUser;
+  strCode += "\"}},{\"match\":{\"status\":\"1\"}},{\"match\":{\"ip\":\"";
+  strCode += clientInfo.szClientIp;
+  strCode += "\"}},{\"match\":{\"ltime\":\"";
+  strCode += clientInfo.szCTime;
+  strCode += "\"}}]}}}'";
+  //printf("%s\n",strCode.c_str());
+  std::string strRes = tools.dealCurlOrder(strCode);
+  char* pBegin = strstr((char*)strRes.c_str(),"\"_id\":\"");
+  if(pBegin)
+  {
+    pBegin += 7;
+    char* pDot = strstr(pBegin,"\"");
+    if(!pDot)
+      return;
+    char szTmp[pDot - pBegin + 1];
+    memset(szTmp,0x00,pDot-pBegin+1);
+    strncpy(szTmp,pBegin,pDot-pBegin);
+    std::string strId = szTmp;
+    pBegin = strstr(pDot,"\"_source\":");
+    
+    if(pBegin == NULL)
+      return;
+    pBegin += 10;
+    pDot = strstr(pBegin,"}");
+    if(!pDot)
+      return;
+    pDot++;
+    char szTmpSource[pDot-pBegin+1];
+    memset(szTmpSource,0x00,pDot-pBegin+1);
+    strncpy(szTmpSource,pBegin,pDot-pBegin);
+    pDot = strstr(szTmpSource,"\"status\":\"");
+    if( pDot == NULL )
+      return;
+    // status 1 -> status 0
+    pDot += 10;
+    *pDot = '0';
+    std::string strSource = szTmpSource;
+    std::string strCode = "curl -s -k -XPUT 'https://";
+    strCode += ES_USER_PWD;
+    strCode += m_es_url;
+    strCode += "/clientinfo/user_log_info/";
+    strCode += strId;
+    strCode += "' -d '";
+    strCode += strSource;
+    strCode += "'";
+    strRes = tools.dealCurlOrder(strCode);
+    return;
+  }
+  else
+    return;
 }
 
 std::string curltool::dealCurlOrder(std::string strCode)
@@ -674,6 +841,7 @@ bool getAllUser(std::string strRes,vct_docinfo& doc_vct)
     if(pBegin == NULL)
       break;
     pBegin+= 10;
+    char* pSource = pBegin;
     pEnd = strstr(pBegin,"\"status\":\"1\"");
     if(pEnd == NULL)
       break;
@@ -690,7 +858,29 @@ bool getAllUser(std::string strRes,vct_docinfo& doc_vct)
       break;
     char szUser[pEnd-pBegin+1];
     memset(szUser,0x00,pEnd-pBegin+1);
-    memcpy(szUser,pBegin,pEnd-pBegin);  
+    memcpy(szUser,pBegin,pEnd-pBegin);
+    
+    pBegin = strstr(pSource,"\"ip\":\"");
+    if(pBegin == NULL)
+      break;
+    pBegin += 6;
+    pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      break;
+    char szIp[pEnd-pBegin+1];
+    memset(szIp,0x00,pEnd-pBegin+1);
+    memcpy(szIp,pBegin,pEnd-pBegin);
+    
+    pBegin = strstr(pSource,"\"ltime\":\"");
+    if(pBegin == NULL)
+      break;
+    pBegin += 9;
+    pEnd = strstr(pBegin,"\"");
+    if(pEnd == NULL)
+      break;
+    char szLTime[pEnd-pBegin+1];
+    memset(szLTime,0x00,pEnd-pBegin+1);
+    memcpy(szLTime,pBegin,pEnd-pBegin);
     
     pBegin = strstr(pEnd,"\"_id\":\"");
       
@@ -698,6 +888,9 @@ bool getAllUser(std::string strRes,vct_docinfo& doc_vct)
     dInfo.strId = szId;
     dInfo.strUser = szUser;
     dInfo.strSource = szSource;
+    dInfo.strIp = szIp;
+    dInfo.strLTime = szLTime;
+    
     doc_vct.push_back(dInfo);
   }
   return true;
@@ -731,6 +924,65 @@ vct_docinfo getUserOnline(std::string strAddr,std::string strUser = "",std::stri
   getAllUser(strRes,doc_vct);
   return doc_vct;
 }
+
+
+void* backround(void* param)
+{
+  std::string strAddr = ((PTParams)param)->strAddr;
+  ServerImpl* service = ((PTParams)param)->service;
+  while(true)
+  {
+    if( kick_time_conf != 0 )
+    {
+      int c_time = (int)time(NULL);
+      c_time -= kick_time_conf*60;
+      char szTmp[24];
+      sprintf(szTmp,"%d",c_time);
+      CMyLock lock(g_Lock);
+      vct_docinfo user_vct = getUserOnline(strAddr,"",szTmp);
+      vct_docinfo_iter iter = user_vct.begin();
+      for(;iter!= user_vct.end();iter++)
+      {
+        std::string strCode = "curl -s -k -XPUT 'https://";
+        strCode += ES_USER_PWD;
+        strCode += strAddr;
+        strCode += "/clientinfo/user_log_info/";
+        strCode += iter->strId;
+        strCode += "' -d '";
+        strCode += iter->strSource;
+        strCode += "\"status\":\"0\"}'";
+        curltool tools;
+        tools.dealCurlOrder(strCode);
+        //call client, m_userStreamHandles erase user
+        std::string strUkey = iter->strUser + iter->strIp + iter->strLTime;
+        service->sendOffLineSignalToClientByUser(strUkey);
+      }
+    }
+    sleep(10);
+  }
+  return (void*)NULL;
+}
+bool CreateServiceThread(TParams tparams)
+{
+	//设置线程状态
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED );
+    
+  pthread_t tThreadT;
+	if (pthread_create(&tThreadT, &attr, backround,(void*)&tparams ))
+	{
+		//写错误日志
+		printf("开启策略线程失败\n");
+		return false;
+	}
+  pthread_attr_destroy(&attr);
+  return true;
+}
+ 
+ 
+ 
 void RunServer(std::string strAddr) {
   
   if( !createESIndex(strAddr))
@@ -766,7 +1018,14 @@ void RunServer(std::string strAddr) {
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout <<  std::endl << "Server listening on " << server_address << std::endl;
- 
+  
+  TParams tparams;
+  tparams.strAddr = strAddr;
+  tparams.service = &service;
+  if(!CreateServiceThread(tparams))
+    return ;
+  
+  
   //server->Wait();
   while(true)
   {
@@ -877,6 +1136,9 @@ void RunServer(std::string strAddr) {
               strCode += "\"status\":\"0\"}'";
               curltool tools;
               tools.dealCurlOrder(strCode);
+              //call client, m_userStreamHandles erase user
+              std::string strUkey = iter->strUser + iter->strIp + iter->strLTime;
+              service.sendOffLineSignalToClientByUser(strUkey);
             }
           }
         }
@@ -901,6 +1163,9 @@ void RunServer(std::string strAddr) {
           strCode += "\"status\":\"0\"}'";
           curltool tools;
           tools.dealCurlOrder(strCode);
+          //call client, m_userStreamHandles erase user
+          std::string strUkey = iter->strUser + iter->strIp + iter->strLTime;
+          service.sendOffLineSignalToClientByUser(strUkey);
         }
       }
       else if(strcmp(szCodes[1],"-a") == 0)
@@ -919,6 +1184,9 @@ void RunServer(std::string strAddr) {
           strCode += "\"status\":\"0\"}'";
           curltool tools;
           tools.dealCurlOrder(strCode);
+          //call client, m_userStreamHandles erase user
+          std::string strUkey = iter->strUser + iter->strIp + iter->strLTime;
+          service.sendOffLineSignalToClientByUser(strUkey);
         }
       }
       else
@@ -936,57 +1204,7 @@ void RunServer(std::string strAddr) {
   }
 }
 
-void* backround(void* param)
-{
-  std::string strAddr = (const char*)param;
-  while(true)
-  {
-    if( kick_time_conf != 0 )
-    {
-      int c_time = (int)time(NULL);
-      c_time -= kick_time_conf*60;
-      char szTmp[24];
-      sprintf(szTmp,"%d",c_time);
-      CMyLock lock(g_Lock);
-      vct_docinfo user_vct = getUserOnline(strAddr,"",szTmp);
-      vct_docinfo_iter iter = user_vct.begin();
-      for(;iter!= user_vct.end();iter++)
-      {
-        std::string strCode = "curl -s -k -XPUT 'https://";
-        strCode += ES_USER_PWD;
-        strCode += strAddr;
-        strCode += "/clientinfo/user_log_info/";
-        strCode += iter->strId;
-        strCode += "' -d '";
-        strCode += iter->strSource;
-        strCode += "\"status\":\"0\"}'";
-        curltool tools;
-        tools.dealCurlOrder(strCode);
-      }
-    }
-    sleep(10);
-  }
-  return (void*)NULL;
-}
-bool CreateServiceThread(std::string strAddr)
-{
-	//设置线程状态
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED );
-    
-  pthread_t tThreadT;
-	if (pthread_create(&tThreadT, &attr, backround,(void*)strAddr.c_str() ))
-	{
-		//写错误日志
-		printf("开启策略线程失败\n");
-		return false;
-	}
-  pthread_attr_destroy(&attr);
-  return true;
-}
- 
+
 int main(int argc, char** argv) {
   
   int ch;
@@ -1011,8 +1229,6 @@ int main(int argc, char** argv) {
     "   -H dbip:port\n");
     return 0;
   }
-  if(!CreateServiceThread(strAddr))
-    return 0;
   
   RunServer(strAddr);
  

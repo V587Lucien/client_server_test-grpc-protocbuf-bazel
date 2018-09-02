@@ -19,4 +19,5 @@
   		rpc userSignUp (ClientRequestParams) returns (ServerResponse);
   		rpc getUserLoginStatus (ClientRequestParams) returns (ServerResponse);
   		rpc userLoginOut (ClientRequestParams) returns (ServerResponse);
+  		rpc waitForOffLine (stream ClientRequestParams) returns ( stream ServerResponse);
 	}

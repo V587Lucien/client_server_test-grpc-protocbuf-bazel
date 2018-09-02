@@ -60,6 +60,15 @@ class ServerService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>> PrepareAsyncuserLoginOut(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>>(PrepareAsyncuserLoginOutRaw(context, request, cq));
     }
+    std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>> waitForOffLine(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>>(waitForOffLineRaw(context));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>> AsyncwaitForOffLine(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>>(AsyncwaitForOffLineRaw(context, cq, tag));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>> PrepareAsyncwaitForOffLine(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>>(PrepareAsyncwaitForOffLineRaw(context, cq));
+    }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>* AsyncuserLoginRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>* PrepareAsyncuserLoginRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) = 0;
@@ -69,6 +78,9 @@ class ServerService final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>* PrepareAsyncgetUserLoginStatusRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>* AsyncuserLoginOutRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::ServerResponse>* PrepareAsyncuserLoginOutRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>* waitForOffLineRaw(::grpc::ClientContext* context) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>* AsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::ClientRequestParams, ::ServerResponse>* PrepareAsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -101,6 +113,15 @@ class ServerService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ServerResponse>> PrepareAsyncuserLoginOut(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::ServerResponse>>(PrepareAsyncuserLoginOutRaw(context, request, cq));
     }
+    std::unique_ptr< ::grpc::ClientReaderWriter< ::ClientRequestParams, ::ServerResponse>> waitForOffLine(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriter< ::ClientRequestParams, ::ServerResponse>>(waitForOffLineRaw(context));
+    }
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>> AsyncwaitForOffLine(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>>(AsyncwaitForOffLineRaw(context, cq, tag));
+    }
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>> PrepareAsyncwaitForOffLine(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>>(PrepareAsyncwaitForOffLineRaw(context, cq));
+    }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
@@ -112,10 +133,14 @@ class ServerService final {
     ::grpc::ClientAsyncResponseReader< ::ServerResponse>* PrepareAsyncgetUserLoginStatusRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::ServerResponse>* AsyncuserLoginOutRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::ServerResponse>* PrepareAsyncuserLoginOutRaw(::grpc::ClientContext* context, const ::ClientRequestParams& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientReaderWriter< ::ClientRequestParams, ::ServerResponse>* waitForOffLineRaw(::grpc::ClientContext* context) override;
+    ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>* AsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
+    ::grpc::ClientAsyncReaderWriter< ::ClientRequestParams, ::ServerResponse>* PrepareAsyncwaitForOffLineRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_userLogin_;
     const ::grpc::internal::RpcMethod rpcmethod_userSignUp_;
     const ::grpc::internal::RpcMethod rpcmethod_getUserLoginStatus_;
     const ::grpc::internal::RpcMethod rpcmethod_userLoginOut_;
+    const ::grpc::internal::RpcMethod rpcmethod_waitForOffLine_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -127,6 +152,7 @@ class ServerService final {
     virtual ::grpc::Status userSignUp(::grpc::ServerContext* context, const ::ClientRequestParams* request, ::ServerResponse* response);
     virtual ::grpc::Status getUserLoginStatus(::grpc::ServerContext* context, const ::ClientRequestParams* request, ::ServerResponse* response);
     virtual ::grpc::Status userLoginOut(::grpc::ServerContext* context, const ::ClientRequestParams* request, ::ServerResponse* response);
+    virtual ::grpc::Status waitForOffLine(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream);
   };
   template <class BaseClass>
   class WithAsyncMethod_userLogin : public BaseClass {
@@ -208,7 +234,27 @@ class ServerService final {
       ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_userLogin<WithAsyncMethod_userSignUp<WithAsyncMethod_getUserLoginStatus<WithAsyncMethod_userLoginOut<Service > > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_waitForOffLine : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_waitForOffLine() {
+      ::grpc::Service::MarkMethodAsync(4);
+    }
+    ~WithAsyncMethod_waitForOffLine() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status waitForOffLine(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream)  override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestwaitForOffLine(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_userLogin<WithAsyncMethod_userSignUp<WithAsyncMethod_getUserLoginStatus<WithAsyncMethod_userLoginOut<WithAsyncMethod_waitForOffLine<Service > > > > > AsyncService;
   template <class BaseClass>
   class WithGenericMethod_userLogin : public BaseClass {
    private:
@@ -273,6 +319,23 @@ class ServerService final {
     }
     // disable synchronous version of this method
     ::grpc::Status userLoginOut(::grpc::ServerContext* context, const ::ClientRequestParams* request, ::ServerResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_waitForOffLine : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_waitForOffLine() {
+      ::grpc::Service::MarkMethodGeneric(4);
+    }
+    ~WithGenericMethod_waitForOffLine() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status waitForOffLine(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -355,6 +418,26 @@ class ServerService final {
     }
     void RequestuserLoginOut(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_waitForOffLine : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_waitForOffLine() {
+      ::grpc::Service::MarkMethodRaw(4);
+    }
+    ~WithRawMethod_waitForOffLine() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status waitForOffLine(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::ServerResponse, ::ClientRequestParams>* stream)  override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestwaitForOffLine(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
