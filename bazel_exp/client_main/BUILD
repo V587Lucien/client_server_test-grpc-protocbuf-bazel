@@ -4,7 +4,7 @@ cc_binary(
     deps = [
         "//lib:CSLibs-grpc","//lib:CSLibs-pb","//lib:Base64"
     ],
-    copts = ["-std=c++11 -I/usr/local/include -pthread"],
-    linkopts = ["-L/usr/local/lib -lgrpc++ -lgrpc -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -pthread -lpthread -ldl"],
+    copts = ["-std=c++11 -I include -pthread"],
+    linkopts = ["-L/home/sheny/new_bazel_exp/grpclib -lgrpc++ -lgrpc -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -pthread -lpthread -ldl"],
 )
 
